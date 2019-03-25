@@ -119,13 +119,13 @@ public class TileManager : Manager
             (targetIndex.y == startIndex.y) && (Mathf.Abs(targetIndex.x - startIndex.x) == 1) )
         {
             //Swap Tiles
-            Utils.DebugUtils.Log("Clicked Tile: " + m_clickedTile.name + " & Target Tile : " + m_targetTile + " are adjacent and can be swapped");
+            //Utils.DebugUtils.Log("Clicked Tile: " + m_clickedTile.name + " & Target Tile : " + m_targetTile + " are adjacent and can be swapped");
 
             //If adjacent then swap tiles on the board
             m_boardManager.SwapTilesOnBoard(startIndex, targetIndex);
 
-            m_clickedTile.AnimateSwap(targetIndex, 0.5f);
-            m_targetTile.AnimateSwap(startIndex, 0.5f);
+            //m_clickedTile.AnimateSwap(targetIndex, 0.5f);
+            //m_targetTile.AnimateSwap(startIndex, 0.5f);
 
           
         }

@@ -42,7 +42,7 @@ public abstract class Tile : MonoBehaviour
     public void OnMouseEnter()
     {
         //Tile Activated
-        HighlightTile(true);
+        //HighlightTile(true);
 
         if (!tileGraphics.tileClicked)
         {
@@ -57,7 +57,7 @@ public abstract class Tile : MonoBehaviour
 
         if (!tileGraphics.tileClicked)
         {
-            HighlightTile(false);
+            //HighlightTile(false);
         }
     }
 
@@ -65,7 +65,7 @@ public abstract class Tile : MonoBehaviour
 
     public void OnMouseUp()
     {
-        HighlightTile(false);
+        //HighlightTile(false);
         tileGraphics.tileClicked = false;
         m_tileManager.ReleaseTile();
     }
@@ -79,7 +79,15 @@ public abstract class Tile : MonoBehaviour
 
     private IEnumerator AnimateTileSwapMovement(Vector2 destination, float animateTime)
     {
+
+        if(tileGraphics.swapAnimating)
+        {
+            yield return new WaitForSeconds(animateTime);
+        }
+
         Vector2 startPos = this.transform.position;
+
+        tileGraphics.swapAnimating = true;
 
         bool reachedDestination = false;
 
@@ -91,6 +99,7 @@ public abstract class Tile : MonoBehaviour
             {
                 reachedDestination = true;
                 transform.position = destination;
+                tileGraphics.swapAnimating = false;
             }
 
             timeElapsed += Time.deltaTime;
@@ -98,12 +107,15 @@ public abstract class Tile : MonoBehaviour
             float t = timeElapsed / animateTime;
 
             transform.position = Vector2.Lerp(startPos, destination, t);
-        
+            
 
             yield return null;
         }
 
     }
+
+
+    
 
 
 
@@ -127,6 +139,7 @@ public class TileData
 [System.Serializable]
 public class TileGraphics
 {
+    public bool swapAnimating = false;
     public bool tileClicked = false;
     public bool tileHighlighted = false;
     public GameObject highlightObject;
