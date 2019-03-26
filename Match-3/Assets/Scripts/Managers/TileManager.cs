@@ -24,8 +24,9 @@ public class TileManager : Manager
 
     private void OnEnable()
     {
-        m_tileFactory.CreateTilePool();
+        m_tileFactory.CreateTilePool();  
         m_boardManager.InitializeBoard();
+              
     }
 
 
@@ -124,10 +125,28 @@ public class TileManager : Manager
             //If adjacent then swap tiles on the board
             m_boardManager.SwapTilesOnBoard(startIndex, targetIndex);
 
-            //m_clickedTile.AnimateSwap(targetIndex, 0.5f);
-            //m_targetTile.AnimateSwap(startIndex, 0.5f);
+            //Animate Swap      
+            AnimateTile(m_clickedTile, targetIndex, 0f);
+            AnimateTile(m_targetTile, startIndex, 0f);
 
-          
+            //No Match Found // Move Tiles back to their original position before swap
+            if (!m_boardManager.FindMatch(startIndex, targetIndex, true))
+            {
+                //Swap back if no match
+                m_boardManager.SwapTilesOnBoard(targetIndex, startIndex);
+
+                //Animate tiles again to their previous positions
+                AnimateTile(m_clickedTile, startIndex, 0.3f);
+                AnimateTile(m_targetTile, targetIndex, 0.3f);
+
+
+            }
+
+            else
+            {
+               // m_boardManager.CheckAllBoardForMatch();
+            }
+
         }
 
         //Debug if tiles not adjacent
@@ -139,9 +158,11 @@ public class TileManager : Manager
     }
 
 
-
-  
-
+    public void AnimateTile(Tile tile, Vector2 destination, float animationTime)
+    {
+        
+        tile.Animate(destination, animationTime);
+    }
 
 
 

@@ -7,10 +7,11 @@ public class BoardManager : Manager
 {
     [SerializeField]
     private TileManager m_tileManager;
-    private IBoardFillStrategy m_boardFillStrategy = new RandomBoardFillStrategy();
+    private IBoardFillStrategy m_boardFillStrategy = new TextBasedBoardFillStrategy();
 
     private int[,] m_logicalBoard;
     private Tile[,] m_tilesOnBoard;
+    List<Tile> m_matchedTiles;
 
 
     public int width;
@@ -41,13 +42,16 @@ public class BoardManager : Manager
     {
         //Init the board arrays
         m_logicalBoard = new int[width, height];
-        m_tilesOnBoard = new Tile[width, height];
+        m_tilesOnBoard = new Tile[width, height];    
+        //m_matchedTiles = new List<Tile>();
+
+
 
         //Get the logical filled board data based on chosen fill method
         m_logicalBoard = m_boardFillStrategy.GetFilledBoard(width, height);
 
         //If we have a filled board from above step
-        if(m_logicalBoard != null)
+        if (m_logicalBoard != null)
         {
             //Fill the graphical board using logical board data
             for (int i = 0; i < width; i++)
@@ -67,7 +71,6 @@ public class BoardManager : Manager
                     PlaceTilesOnBoard(tile_to_place, tileCode, i, j);
 
 
-
                 }
 
             }
@@ -79,23 +82,47 @@ public class BoardManager : Manager
         }
 
 
-       
 
-        //Find Matches on board Initialization
-        for (int i = 0; i < width; i++)
-        {
-            for (int j = 0; j < height; j++)
-            {
-                FindMatch(new Vector2(i , j), new Vector2(i , j));
-            }
+        //for (int i = 0; i < width; i++)
+        //{
+        //    for (int j = 0; j < height; j++)
+        //    {
+                
+        //      if(!m_tilesOnBoard[i , j].tileGraphics.tileHighlighted)
+        //      {
+        //          FindMatch(new Vector2(i, j), new Vector2(i, j), false);
+        //      }
+            
+                                                      
+                
+        //    }
 
-        }
+        //}
 
 
     }
 
 
-   
+    public void CheckAllBoardForMatch()
+    {
+        for (int i = 0; i < width; i++)
+        {
+            for (int j = 0; j < height; j++)
+            {
+                if (!m_tilesOnBoard[i, j].tileGraphics.tileHighlighted)
+                {
+                    FindMatch(new Vector2(i, j), new Vector2(i, j), false);
+                }
+
+            }
+
+        }
+    }
+
+
+
+
+
 
 
 
@@ -109,12 +136,7 @@ public class BoardManager : Manager
     /// <param name="y">Y index of board</param>
     public void PlaceTilesOnBoard(Tile tile_to_place, int tileCode, int x, int y)
     {
-        ///////
-        //NOTE: Cannot Set position here as we need to animate movement
-        //      Initialize position outside this function avoid that problem
-        //      tile_to_place.transform.position = new Vector2(i, j);
-        ///////
-        
+       
         //Set tile coordinates
         tile_to_place.tileData.X = x;
         tile_to_place.tileData.Y = y;
@@ -124,49 +146,45 @@ public class BoardManager : Manager
 
         //Clean up visuals
         tile_to_place.transform.parent = this.transform;
-        tile_to_place.gameObject.SetActive(true);
+
         tile_to_place.HighlightTile(false);
+
+        //When clearing tiles, empty space has tilecode 0 which are de-activated tiles
+        if (tileCode != 0)
+        {
+            tile_to_place.gameObject.SetActive(true);
+            
+        }
+        
 
         //Logically & graphically place the tiles on board
         m_logicalBoard[x, y] = tileCode;
         m_tilesOnBoard[x, y] = tile_to_place;
+
+        
     }
 
 
     /// <summary>
     /// Swap the tiles
     /// </summary>
-    /// <param name="startTileIndex">Index / coordinate of 1st tile to swap</param>
-    /// <param name="targetTileIndex">Index / coordinate of 2nd tile to swap with</param>
+    /// <param name="startTileIndex">Destination Index / coordinate of 1st tile to swap/move to</param>
+    /// <param name="targetTileIndex">Destination Index / coordinate of 2nd tile to swap/move to</param>
     public void SwapTilesOnBoard(Vector2 startTileIndex, Vector2 targetTileIndex)
     {
-
-        
 
         //Get the graphical tiles to swap from the board
         Tile startTile = m_tilesOnBoard[(int)startTileIndex.x, (int)startTileIndex.y];
         Tile destTile = m_tilesOnBoard[(int)targetTileIndex.x, (int)targetTileIndex.y];
 
-        startTile.AnimateSwap(targetTileIndex, 0.3f);
-        destTile.AnimateSwap(startTileIndex, 0.3f);
+        int startTileCode = m_logicalBoard[(int)startTileIndex.x, (int)startTileIndex.y];
+        int destTileCode = m_logicalBoard[(int)targetTileIndex.x, (int)targetTileIndex.y]; 
+
+        PlaceTilesOnBoard(startTile, startTileCode, (int)targetTileIndex.x, (int)targetTileIndex.y);
+        PlaceTilesOnBoard(destTile, destTileCode, (int)startTileIndex.x, (int)startTileIndex.y);
 
 
-        //Place both the tiles on board logically and graphically
-        PlaceTilesOnBoard(startTile, startTile.tileData.TILE_CODE, (int)targetTileIndex.x, (int)targetTileIndex.y);
-        PlaceTilesOnBoard(destTile, destTile.tileData.TILE_CODE, (int)startTileIndex.x, (int)startTileIndex.y);
-
-       
-
-        //No Match Found
-        if (!FindMatch(startTileIndex, targetTileIndex))
-        {
-            startTile.AnimateSwap(startTileIndex, 0.3f);
-            destTile.AnimateSwap(targetTileIndex, 0.3f);
-
-            PlaceTilesOnBoard(startTile, startTile.tileData.TILE_CODE, (int)startTileIndex.x, (int)startTileIndex.y);
-            PlaceTilesOnBoard(destTile, destTile.tileData.TILE_CODE, (int)targetTileIndex.x, (int)targetTileIndex.y);
-        }
-
+        
     }
 
 
@@ -176,74 +194,118 @@ public class BoardManager : Manager
     /// <param name="startTileIndex">1st swap tile</param>
     /// <param name="targetTileIndex">2nd swap tile</param>
     /// <returns></returns>
-    public bool FindMatch(Vector2 startTileIndex, Vector2 targetTileIndex)
+    public bool FindMatch(Vector2 startTileIndex, Vector2 targetTileIndex, bool swapCheck = false)
     {
   
-
         //1st Swap Tile Match check horizontal and vertical
         List<Tile> l1 = FindHorizontalMatches((int)targetTileIndex.x, (int)targetTileIndex.y);
         List<Tile> l2 = FindVerticalMatches((int)targetTileIndex.x, (int)targetTileIndex.y);
 
+
+       
+
         //Temp list to store all found matches
-        List<Tile> tileMatches = new List<Tile>();
+        List<Tile> m_matchedTilesTarget = new List<Tile>();
+        List<Tile> m_matchedTilesStart = new List<Tile>();
         bool matchFound = false;
 
         //Concatinate both horizontal and vertical match found list objects
         if (l1 == null)
         {
-            tileMatches = l2;
+            l1 = new List<Tile>();
         }
 
-        else if (l2 == null)
+        if (l2 == null)
         {
-            tileMatches = l1;
+            l2 = new List<Tile>();
         }
 
-        else if (l1 != null && l2 != null)
+        if (l1 != null && l2 != null)
         {
-            tileMatches = l1.Union(l2).ToList();
+            m_matchedTilesTarget = l1.Union(l2).ToList();
         }
 
-        if (tileMatches != null && tileMatches.Count > 0)
+        if (m_matchedTilesTarget != null && m_matchedTilesTarget.Count > 0)
         {
             //Highlight the found matches
-            ShowFoundMatches(ref tileMatches);
-            tileMatches.Clear();
+            //ShowFoundMatches(ref m_matchedTiles);
+           
             matchFound = true;
         }
 
 
-
-        //2nd Swap Tile Match check
-        l1 = FindHorizontalMatches((int)startTileIndex.x, (int)startTileIndex.y);
-        l2 = FindVerticalMatches((int)startTileIndex.x, (int)startTileIndex.y);
-
-
-
-
-
-        if (l1 == null)
+        //If we are checking for matches from all tiles only 1 above iteration is enough
+        //This is special case for checking twice when tiles are swapped
+        if(swapCheck)
         {
-            tileMatches = l2;
+            //2nd Swap Tile Match check
+            l1 = FindHorizontalMatches((int)startTileIndex.x, (int)startTileIndex.y);
+            l2 = FindVerticalMatches((int)startTileIndex.x, (int)startTileIndex.y);
+
+
+
+
+            if (l1 == null)
+            {
+                l1 = new List<Tile>();
+            }
+
+            if (l2 == null)
+            {
+                l2 = new List<Tile>();
+            }
+
+            if (l1 != null && l2 != null)
+            {
+                m_matchedTilesStart = l1.Union(l2).ToList();
+            }
+
+            if (m_matchedTilesStart != null && m_matchedTilesStart.Count > 0)
+            {
+               // ShowFoundMatches(ref m_matchedTiles);
+
+                matchFound = true;
+            }
+
         }
 
-        else if (l2 == null)
+
+        if(m_matchedTilesTarget == null)
         {
-            tileMatches = l1;
+            m_matchedTilesTarget = new List<Tile>();
         }
 
-        else if (l1 != null && l2 != null)
+        if(m_matchedTiles == null)
         {
-            tileMatches = l1.Union(l2).ToList();
+            m_matchedTiles = new List<Tile>();
         }
 
-        if (tileMatches != null && tileMatches.Count > 0)
+        if(swapCheck)
         {
-            ShowFoundMatches(ref tileMatches);
-            tileMatches.Clear();
-            matchFound = true;
+
+            if (m_matchedTilesStart == null)
+            {
+                m_matchedTilesStart = new List<Tile>();
+            }
+
+            m_matchedTiles = m_matchedTiles.Union(m_matchedTilesTarget.Union(m_matchedTilesStart).ToList()).ToList();
         }
 
+        else
+        {
+            m_matchedTiles = m_matchedTiles.Union(m_matchedTilesTarget).ToList();
+        }
+
+        
+
+        if(m_matchedTiles != null)
+        {
+            ShowFoundMatches(ref m_matchedTiles);
+        }
+       
+
+
+      
 
         return matchFound;
        
@@ -251,81 +313,85 @@ public class BoardManager : Manager
 
     }
 
+  
 
 
 
-
-    public bool CheckBounds(int x, int y)
+    /// <summary>
+    /// This function finds all the vertical matches in a column
+    /// </summary>
+    /// <param name="x"></param>
+    /// <param name="y"></param>
+    /// <returns>Returns a list with all tiles matched vertically in a column</returns>
+    private List<Tile> FindVerticalMatches(int x, int y)
     {
-        if ((x >= 0 && x < width) && (y >= 0 && y < height))
-        {
-            return true;
-        }
-
-        return false;
-    }
-
-
-    
-
-    public List<Tile> FindVerticalMatches(int x, int y)
-    {
-        //Utils.DebugUtils.Log("Row: " + y + " Col: " + x);
-
+        //Get the starting tile from which to start matching
         int startTileCode = m_logicalBoard[x, y];
         int matchCount = 1;
 
-
+        //Temp list to store all matches found vertically
         List<Tile> verticalMatches = new List<Tile>();
+
+        //Add the starting tile 
         verticalMatches.Add(m_tilesOnBoard[x, y]);
 
-        // Up
-        for (int i = 1; i <= 2; i++)
-        {
+        //This search alogrithm will find matches by searching 2 neighbouring tiles above the starting tile
+        // and 2 neighbouring tiles below the starting tile making a total of 5 max tiles that can be matched
+        //We continue search if we have matching tile codes in up as well as down direction
+        //We end search if next neighbouring tile has different tile code or we have reached the array boundary
 
-            if (!CheckBounds(x, y + i))
+        
+            // UP (Start searching for 2 mathcing neighbours above starting tile)
+            //TODO: Change the number 2 to a variable so we can set how many max matches we can find
+            // 2 represents 2 above and 2 below so total 5 matches including the start tile
+            for (int i = 1; i < height + width; i++)
             {
-                break;
-            }
-
-
-
-            int nextTileCode = m_logicalBoard[x, y + i];
-
-           
-            if (startTileCode == nextTileCode)
-            {
-                
-                matchCount += 1;
-
-                if (!verticalMatches.Contains(m_tilesOnBoard[x, y + i]))
+                //Check if we have 2 neighbours above
+                if (!CheckBounds(x, y + i))
                 {
-                    verticalMatches.Add(m_tilesOnBoard[x, y + i]);
+                    //If not break and continue searching for 2 neighbours below the starting tile
+                    break;
                 }
 
-                if (matchCount >= 3)
+                //Get the next tile code
+                int nextTileCode = m_logicalBoard[x, y + i];
+
+                //If the tile above has same tile code // then a match is found
+                if (startTileCode == nextTileCode)
                 {
-                    //Utils.DebugUtils.Log("Matched Vertically " + matchCount);
+                    //Increment match counter to keep track of how many matches
+                    matchCount += 1;
 
+                    //Add the tile to the matches list
+                    if (!verticalMatches.Contains(m_tilesOnBoard[x, y + i]))
+                    {
+                        verticalMatches.Add(m_tilesOnBoard[x, y + i]);
+                    }
+
+                    //EXTEND: We can add special bonuses for more matches
+                    if (matchCount >= 3)
+                    {
+                        //Utils.DebugUtils.Log("Matched Vertically " + matchCount);
+
+                    }
                 }
+
+                //If the tile above has different tile code then end the up search
+                else
+                {
+
+                    break;
+                }
+
             }
 
-            else
-            {
-                
-                break;
-            }
-
-
-
-        }
+        
 
 
 
 
-
-        // Down
-        for (int i = 1; i <= 2; i++)
+        // Down search
+        for (int i = 1; i < height + width; i++)
         {
 
             if (!CheckBounds(x, y - i))
@@ -339,7 +405,7 @@ public class BoardManager : Manager
 
             if (startTileCode == nextTileCode)
             {
-                //TODO: Add matching tiles
+              
                 matchCount += 1;
 
                 if (!verticalMatches.Contains(m_tilesOnBoard[x, y - i]))
@@ -366,10 +432,9 @@ public class BoardManager : Manager
       
 
        
-
+         //If we have minimum of 3 matches then return those matches
         if (matchCount >= 3)
         {
-            //ShowFoundMatches();
             return verticalMatches;
         }
 
@@ -382,67 +447,60 @@ public class BoardManager : Manager
 
 
 
-
-    public List<Tile> FindHorizontalMatches(int x, int y)
-    {
-        //Utils.DebugUtils.Log("Row: " + y + " Col: " + x);
-
-       
+    /// <summary>
+    /// This function finds all the horizontal matches in a row
+    /// </summary>
+    /// <param name="x"></param>
+    /// <param name="y"></param>
+    /// <returns>Returns a list with all matches found horizontally in a row</returns>
+    private List<Tile> FindHorizontalMatches(int x, int y)
+    {   
         int startTileCode = m_logicalBoard[x, y];
         int matchCount = 1;
-
 
         List<Tile> horizontalMatches = new List<Tile>();
         horizontalMatches.Add(m_tilesOnBoard[x, y]);
 
-        // Right 
-        for (int i = 1; i <= 2; i++)
-        {
-
-            if(!CheckBounds(x + i, y))
+         // Right 
+            for (int i = 1; i < height + width; i++)
             {
-                break;
-            }
 
-
-            
-            int nextTileCode = m_logicalBoard[x + i, y];
-
-           
-
-            if (startTileCode == nextTileCode)
-            {
-                //TODO: Add matching tiles
-                matchCount += 1;
-
-                if (!horizontalMatches.Contains(m_tilesOnBoard[x + i, y]))
+                if (!CheckBounds(x + i, y))
                 {
-                    horizontalMatches.Add(m_tilesOnBoard[x + i, y]);
+                    break;
                 }
 
-                if (matchCount >= 3)
+                int nextTileCode = m_logicalBoard[x + i, y];
+
+                if (startTileCode == nextTileCode)
                 {
-                   // Utils.DebugUtils.Log("Matched Horizontally " + matchCount);
-                    
+                    //TODO: Add matching tiles
+                    matchCount += 1;
+
+                    if (!horizontalMatches.Contains(m_tilesOnBoard[x + i, y]))
+                    {
+                        horizontalMatches.Add(m_tilesOnBoard[x + i, y]);
+                    }
+
+                    if (matchCount >= 3)
+                    {
+                        // Utils.DebugUtils.Log("Matched Horizontally " + matchCount);
+
+                    }
                 }
+
+                else
+                {
+                    break;
+                }
+
             }
-
-            else
-            {
-                
-                break;
-            }
-            
-           
-
-        }
-
-
+        
       
 
-
+    
         // Left
-        for (int i = 1; i <= 2; i++)
+        for (int i = 1; i < height + width; i++)
         {
 
             if (!CheckBounds(x - i, y))
@@ -450,9 +508,7 @@ public class BoardManager : Manager
                 break;
             }
 
-
             int nextTileCode = m_logicalBoard[x - i, y];
-
 
             if (startTileCode == nextTileCode)
             {
@@ -466,50 +522,115 @@ public class BoardManager : Manager
 
                 if (matchCount >= 3)
                 {
-                    //Utils.DebugUtils.Log("Matched Horizontally " + matchCount);
-
+                   //Utils.DebugUtils.Log("Matched Horizontally " + matchCount);
                 }
             }
 
             else
-            {
-                
+            {              
                 break;
             }
 
-
-
         }
-
-        
-
+     
         if (matchCount >= 3)
-        {
-            //ShowFoundMatches();
+        {         
             return horizontalMatches;
         }
-
-
-        
-
+      
         return null;
-       
-
-
-
+      
     }
 
 
+
+    /// <summary>
+    /// Checks whether the index positons are within the boundaries of the board dimenstion
+    /// </summary>
+    /// <param name="x"></param>
+    /// <param name="y"></param>
+    /// <returns>Returns true if index position is within the boundaries of board arrray</returns>
+    private bool CheckBounds(int x, int y)
+    {
+        if ((x >= 0 && x < width) && (y >= 0 && y < height))
+        {
+            return true;
+        }
+
+        return false;
+    }
+
+
+
+    /// <summary>
+    /// Highlights the tiles which are matched
+    /// </summary>
+    /// <param name="matchedTiles"></param>
     public void ShowFoundMatches(ref List<Tile> matchedTiles)
     {
+        
+
         for(int i = 0; i < matchedTiles.Count; i++)
         {
             matchedTiles[i].HighlightTile(true);
         }
 
+
+        //StartCoroutine(ClearMatchedTiles(matchedTiles));
+        ClearMatchedTiles(matchedTiles);
       
     }
 
+
+
+
+    //TODO: Clear tiles at index function for later bonus abilities
+    public void ClearMatchedTiles(List<Tile> matchedTiles)
+    {
+     
+        //Clear Tiles
+        for (int i = 0; i < matchedTiles.Count; i++)
+        {
+            //yield return new WaitForSeconds(0.2f);
+
+            int x = matchedTiles[i].tileData.X;
+            int y = matchedTiles[i].tileData.Y;
+
+                
+            //Make it Empty tile
+            m_logicalBoard[x, y] = 0;
+
+            //Clear Tile
+            m_tilesOnBoard[x, y].OnDeSpawnTile();
+
+          
+
+        }
+
+        for (int i = 0; i < matchedTiles.Count; i++)
+        {
+    
+            //We need to move all pieces above all of the cleared tiles by 1 row
+            for (int y = matchedTiles[i].tileData.Y; y < height - 1; y++)
+            {
+               
+                m_tileManager.AnimateTile(m_tilesOnBoard[matchedTiles[i].tileData.X, y + 1], new Vector2(matchedTiles[i].tileData.X, y), 0.5f);
+                SwapTilesOnBoard(new Vector2(matchedTiles[i].tileData.X, y + 1), new Vector2(matchedTiles[i].tileData.X, y));
+
+            }
+
+        }
+
+
+
+        
+
+        print("End");
+
+        
+
+
+    }
 
 
     public void SetupCamera()

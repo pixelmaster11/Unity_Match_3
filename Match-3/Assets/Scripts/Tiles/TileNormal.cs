@@ -6,11 +6,5 @@ public class TileNormal : Tile
 {
     
 
-    public override void OnDeSpawnTile()
-    {
-        
-    }
-
-  
     
 }

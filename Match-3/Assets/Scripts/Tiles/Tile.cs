@@ -14,12 +14,18 @@ public abstract class Tile : MonoBehaviour
     public virtual void OnSpawnTile(TileManager tm)
     {
         m_tileManager = tm;
-
+       
 
     }
 
     //Animate on despawn
-    public abstract void OnDeSpawnTile();
+    public virtual void OnDeSpawnTile()
+    {
+        HighlightTile(false);
+        this.gameObject.SetActive(false);
+        this.transform.parent = m_tileManager.transform;
+        //this.gameObject.name = "Cleared Tile";
+    }
 
 
    
@@ -71,26 +77,40 @@ public abstract class Tile : MonoBehaviour
     }
 
 
-    public void AnimateSwap(Vector2 dest, float animTime)
+    /// <summary>
+    /// Animate swap movement from current tile position to destination position
+    /// </summary>
+    /// <param name="dest">Destination position this tile will move to</param>
+    /// <param name="animTime">Time take for this tile to move from current position to destination position</param>
+    public void Animate(Vector2 dest, float animTime)
     {
-        StartCoroutine(AnimateTileSwapMovement(dest, animTime));
+        if(gameObject.activeInHierarchy)
+        {
+            StartCoroutine(AnimateTileMovement(dest, animTime));
+        }
+       
     }
 
 
-    private IEnumerator AnimateTileSwapMovement(Vector2 destination, float animateTime)
+    /// <summary>
+    /// Couroutine to interpolate movement
+    /// </summary>
+    /// <param name="destination"></param>
+    /// <param name="animateTime"></param>
+    /// <returns></returns>
+    private IEnumerator AnimateTileMovement(Vector2 destination, float animateTime)
     {
-
+        //If this tile is already or still moving to destination but this is not the clearing animation
+        //If clearing animation after clearing tiles then fall immediately
         if(tileGraphics.swapAnimating)
         {
+            //Then wait till it completes the movement then proceed
             yield return new WaitForSeconds(animateTime);
         }
 
         Vector2 startPos = this.transform.position;
-
         tileGraphics.swapAnimating = true;
-
         bool reachedDestination = false;
-
         float timeElapsed = 0;
 
         while(!reachedDestination)
@@ -103,8 +123,10 @@ public abstract class Tile : MonoBehaviour
             }
 
             timeElapsed += Time.deltaTime;
-
+             
             float t = timeElapsed / animateTime;
+
+            ///t = t * t * t * (t * (t * 6 - 15) + 10);
 
             transform.position = Vector2.Lerp(startPos, destination, t);
             
@@ -114,6 +136,11 @@ public abstract class Tile : MonoBehaviour
 
     }
 
+
+    private IEnumerator OnMatch()
+    {
+        yield return new WaitForSeconds(1);
+    }
 
     
 

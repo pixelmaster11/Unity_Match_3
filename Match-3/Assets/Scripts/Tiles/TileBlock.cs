@@ -4,10 +4,7 @@ using UnityEngine;
 
 public class TileBlock : Tile
 {
-    public override void OnDeSpawnTile()
-    {
-        throw new System.NotImplementedException();
-    }
+  
 
     
 }

@@ -40,7 +40,7 @@ public class TextBasedBoardFillStrategy : IBoardFillStrategy
                 for (int j = 0; j < height; j++)
                 {
                    
-                    board[i, j] = System.Int32.Parse(data[i].Split(' ')[j]);
+                    board[j , i] = System.Int32.Parse(data[i].Split(' ')[j]);
 
                 }
             }
