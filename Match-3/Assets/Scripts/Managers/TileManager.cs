@@ -138,14 +138,17 @@ public class TileManager : Manager
        
 
         //Animate Swap      
-        AnimateTile(m_clickedTile, targetIndex, 0.3f);
-        AnimateTile(m_targetTile, startIndex, 0.3f);
-  
+        AnimateTile(m_clickedTile, targetIndex, m_clickedTile.tileGraphics.tileSwapSpeed);
+        AnimateTile(m_targetTile, startIndex, m_targetTile.tileGraphics.tileSwapSpeed);
 
-        yield return new WaitForSeconds(0.3f);
+
+        yield return new WaitForSeconds(m_targetTile.tileGraphics.tileSwapSpeed);
 
         //If adjacent then swap tiles on the board
         m_boardManager.SwapTilesOnBoard(startIndex, targetIndex);
+
+
+       
 
         //No Match Found // Move Tiles back to their original position before swap
         if (!m_boardManager.FindMatch(startIndex, targetIndex, true))
@@ -153,8 +156,8 @@ public class TileManager : Manager
             print("no matches");
 
             //Animate tiles again to their previous positions
-            AnimateTile(m_clickedTile, startIndex, 0.3f);
-            AnimateTile(m_targetTile, targetIndex, 0.3f);
+            AnimateTile(m_clickedTile, startIndex, m_clickedTile.tileGraphics.tileSwapSpeed);
+            AnimateTile(m_targetTile, targetIndex, m_targetTile.tileGraphics.tileSwapSpeed);
 
             //yield return new WaitForSeconds(0.3f);
 
@@ -168,7 +171,8 @@ public class TileManager : Manager
 
         else
         {
-            yield return new WaitForSeconds(0.3f);
+            //yield return new WaitForSeconds(m_targetTile.tileGraphics.tileSwapSpeed);
+            //yield return null;
             m_boardManager.ClearTiles();
             // m_boardManager.CheckAllBoardForMatch();
         }
@@ -181,10 +185,10 @@ public class TileManager : Manager
 
     
 
-    public void AnimateTile(Tile tile, Vector2 destination, float animationTime, bool cleared = false)
+    public void AnimateTile(Tile tile, Vector2 destination, float animationTime)
     {
         
-        tile.Animate(destination, animationTime, cleared);
+        tile.Animate(destination, animationTime);
     }
 
 

@@ -82,23 +82,7 @@ public class BoardManager : Manager
         }
 
 
-
-        //for (int i = 0; i < width; i++)
-        //{
-        //    for (int j = 0; j < height; j++)
-        //    {
-                
-        //      if(!m_tilesOnBoard[i , j].tileGraphics.tileHighlighted)
-        //      {
-        //          FindMatch(new Vector2(i, j), new Vector2(i, j), false);
-        //      }
-            
-                                                      
-                
-        //    }
-
-        //}
-
+        
 
     }
 
@@ -619,28 +603,84 @@ public class BoardManager : Manager
 
         }
 
-        //for (int i = 0; i < m_matchedTiles.Count; i++)
-        //{
-
-        //    //We need to move all pieces above all of the cleared tiles by 1 row
-        //    for (int y = m_matchedTiles[i].tileData.Y; y < height - 1; y++)
-        //    {
-
-        //        m_tileManager.AnimateTile(m_tilesOnBoard[m_matchedTiles[i].tileData.X, y + 1], new Vector2(m_matchedTiles[i].tileData.X, y), 0.5f, true);
-        //        SwapTilesOnBoard(new Vector2(m_matchedTiles[i].tileData.X, y + 1), new Vector2(m_matchedTiles[i].tileData.X, y));
-
-
-        //    }
-
-        //}
-
-        StartCoroutine(Collapse());
+        Collapse();
             
 
     }
 
 
-    public IEnumerator Collapse()
+    //Clears all tiles from col and row
+    public void ClearTiles(int col, int row, bool clearRow = false, bool clearCol = false)
+    {
+        if(clearRow == false & clearCol == false)
+        {
+            ClearTiles(new Vector2(col, row));
+            return;
+        }
+
+        if(clearRow)
+        {
+            //Clear row
+            for (int i = 0; i < width; i++)
+            {
+                //yield return new WaitForSeconds(0.2f);
+
+                //Make it Empty tile
+                m_logicalBoard[i, row] = 0;
+
+                //Clear Tile
+                m_tilesOnBoard[i, row].OnDeSpawnTile();
+
+                Collapse(i, row);
+            }
+        }
+
+        if(clearCol)
+        {
+
+            //Clear col
+            for (int i = 0; i < height; i++)
+            {
+                //yield return new WaitForSeconds(0.2f);
+
+                //Make it Empty tile
+                m_logicalBoard[col, i] = 0;
+
+                //Clear Tile
+                m_tilesOnBoard[col, i].OnDeSpawnTile();
+
+                Collapse(col, i);
+            }
+        }
+
+
+
+
+
+
+    }
+
+
+    public void ClearTiles(Vector2 index)
+    {
+        int x = (int)index.x;
+        int y = (int)index.y;
+
+        //Make it Empty tile
+        m_logicalBoard[x, y] = 0;
+
+        //Clear Tile
+        m_tilesOnBoard[x, y].OnDeSpawnTile();
+
+        Collapse(x, y);
+    }
+
+
+   
+
+
+
+    public void Collapse()
     {
         for (int i = 0; i < m_matchedTiles.Count; i++)
         {
@@ -649,18 +689,48 @@ public class BoardManager : Manager
             for (int y = m_matchedTiles[i].tileData.Y; y < height - 1; y++)
             {
 
-                m_tileManager.AnimateTile(m_tilesOnBoard[m_matchedTiles[i].tileData.X, y + 1], new Vector2(m_matchedTiles[i].tileData.X, y), 0.3f, true);
+                m_tilesOnBoard[m_matchedTiles[i].tileData.X, y + 1].tileGraphics.tileFalling = true;
+
+                float fallSpeed = m_tilesOnBoard[m_matchedTiles[i].tileData.X, y + 1].tileGraphics.tileFallSpeed;
+
+                m_tileManager.AnimateTile(m_tilesOnBoard[m_matchedTiles[i].tileData.X, y + 1], new Vector2(m_matchedTiles[i].tileData.X, y), fallSpeed);
                
                 SwapTilesOnBoard(new Vector2(m_matchedTiles[i].tileData.X, y + 1), new Vector2(m_matchedTiles[i].tileData.X, y));
 
-                yield return new WaitForEndOfFrame();
+                
+               // yield return new WaitForEndOfFrame();
             }
 
-            //yield return new WaitForSeconds(0.05f);
+          
         }
 
+        
+   
         print("End");
     }
+
+
+    //Collapse at pos x, y
+    public void Collapse(int X, int Y)
+    {
+        
+         //We need to move all pieces above all of the cleared tiles by 1 row
+        for (int y = Y; y < height - 1; y++)
+        {
+           m_tilesOnBoard[X, y + 1].tileGraphics.tileFalling = true;
+
+           float fallSpeed = m_tilesOnBoard[X, y + 1].tileGraphics.tileFallSpeed;
+
+           m_tileManager.AnimateTile(m_tilesOnBoard[X, y + 1], new Vector2(X, y), fallSpeed);
+
+           SwapTilesOnBoard(new Vector2(X, y + 1), new Vector2(X, y));
+               
+        }
+    
+        print("End");
+    }
+
+
 
     public void SetupCamera()
     {

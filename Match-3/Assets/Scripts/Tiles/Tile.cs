@@ -7,8 +7,9 @@ public abstract class Tile : MonoBehaviour
 {
     public TileData tileData;
     public TileGraphics tileGraphics;
-
     private TileManager m_tileManager;
+
+    public AnimationCurve animationCurve;
 
     //Animate on spawn
     public virtual void OnSpawnTile(TileManager tm)
@@ -83,11 +84,16 @@ public abstract class Tile : MonoBehaviour
     /// </summary>
     /// <param name="dest">Destination position this tile will move to</param>
     /// <param name="animTime">Time take for this tile to move from current position to destination position</param>
-    public void Animate(Vector2 dest, float animTime, bool cleared)
+    public void Animate(Vector2 dest, float animTime)
     {
         if(gameObject.activeInHierarchy)
         {
-            StartCoroutine(AnimateTileMovement(dest, animTime, cleared));
+            if(tileGraphics.tileFalling)
+            {
+                StopAllCoroutines();
+            }
+
+            StartCoroutine(AnimateTileMovement(dest, animTime));
         }
        
     }
@@ -99,7 +105,7 @@ public abstract class Tile : MonoBehaviour
     /// <param name="destination"></param>
     /// <param name="animateTime"></param>
     /// <returns></returns>
-    private IEnumerator AnimateTileMovement(Vector2 destination, float animateTime, bool cleared)
+    private IEnumerator AnimateTileMovement(Vector2 destination, float animateTime)
     {
         //If this tile is already or still moving to destination but this is not the clearing animation
 
@@ -123,6 +129,7 @@ public abstract class Tile : MonoBehaviour
             {
                 reachedDestination = true;
                 tileGraphics.swapAnimating = false;
+                tileGraphics.tileFalling = false;
                 transform.position = destination;
                 
                 
@@ -132,7 +139,9 @@ public abstract class Tile : MonoBehaviour
              
             float t = timeElapsed / animateTime;
 
-            ///t = t * t * t * (t * (t * 6 - 15) + 10);
+            //t = t * t * t * (t * (t * 6 - 15) + 10);
+
+            t = Mathf.Clamp01(animationCurve.Evaluate(t));
 
             transform.position = Vector2.Lerp(startPos, destination, t);
 
@@ -144,18 +153,6 @@ public abstract class Tile : MonoBehaviour
         //tileGraphics.swapAnimating = false;
 
     }
-
-
-    private IEnumerator OnMatch()
-    {
-        yield return new WaitForSeconds(1);
-    }
-
-    
-
-
-
-
 
 
 }
@@ -175,6 +172,9 @@ public class TileData
 [System.Serializable]
 public class TileGraphics
 {
+    public float tileFallSpeed = 0.1f;
+    public float tileSwapSpeed = 0.3f;
+    public bool tileFalling = false;
     public bool swapAnimating = false;
     public bool tileClicked = false;
     public bool tileHighlighted = false;
