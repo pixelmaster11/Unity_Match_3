@@ -6,14 +6,14 @@ using System.Text;
 
 public class TextBasedBoardFillStrategy : IBoardFillStrategy
 {
-    public int[,] GetFilledBoard(int width, int height, int map = 0)
+     
+    public int FillBoard(int width, int height, int i, int j,  int map = 0, bool generateRandom = false)
     {
-        return Load(width, height);    
-        
+        return Load(width, height, i, j, generateRandom);           
     }
 
 
-    private int [,] Load(int width, int height)
+    private int Load(int width, int height, int i, int j, bool generateRandom)
     {
         string path = "Assets/Resources/Level1.txt";
 
@@ -29,29 +29,28 @@ public class TextBasedBoardFillStrategy : IBoardFillStrategy
         ///  HEIGHT ..     ..  ... WIDTH
         ////
 
-        //Check if we have properly dimensioned data in accordance with the board dimensions
-        if(data.Length == width)
+    
+
+
+        if (generateRandom)
         {
-            int[,] board = new int[width, height];
+            Random.InitState((int)System.DateTime.Now.Ticks);
 
+            return Random.Range(1, 9);
+        }
 
-            for (int i = 0; i < width; i++)
-            {
-                for (int j = 0; j < height; j++)
-                {
-                   
-                    board[j , i] = System.Int32.Parse(data[i].Split(' ')[j]);
-
-                }
-            }
-
-            return board;
+        //Check if we have properly dimensioned data in accordance with the board dimensions
+        if (data.Length == width)
+        {
+            
+            return System.Int32.Parse(data[width - 1 - j].Split(' ')[i]);
+       
         }
 
         else
         {
             Utils.DebugUtils.Log("File data width: " + data.Length + " does not match with board width: " + width);
-            return null;
+            return 0;
         }
 
     

@@ -9,6 +9,6 @@ using UnityEngine;
 public interface IBoardFillStrategy 
 {
 
-    int[ , ] GetFilledBoard(int width, int height, int map = 0);
+    int FillBoard(int width, int height, int i, int j, int map = 0, bool generateRandom = false);
 	
 }

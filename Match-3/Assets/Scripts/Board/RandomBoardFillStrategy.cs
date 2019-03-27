@@ -4,22 +4,11 @@ using UnityEngine;
 
 public class RandomBoardFillStrategy : IBoardFillStrategy
 {
-    public int[, ] GetFilledBoard (int width, int height, int map = 0)
+    public int FillBoard (int width, int height, int i, int j, int map = 0, bool generateRandom = false)
     {
-        Random.InitState((int)System.DateTime.Now.Ticks);
+        //Random.InitState((int)System.DateTime.Now.Ticks);
 
-        int[,] board = new int[width, height];
-
-        for (int i = 0; i < width; i++)
-        {
-            for (int j = 0; j < height; j++)
-            {
-
-                board[i, j] = Random.Range(1, 9);        
-
-            }
-        }
-
-        return board;
+        return Random.Range(1, 9);
+       
     }
 }

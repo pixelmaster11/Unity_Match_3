@@ -7,7 +7,7 @@ public class BoardManager : Manager
 {
     [SerializeField]
     private TileManager m_tileManager;
-    private IBoardFillStrategy m_boardFillStrategy = new TextBasedBoardFillStrategy();
+    private IBoardFillStrategy m_boardFillStrategy;
 
     private int[,] m_logicalBoard;
     private Tile[,] m_tilesOnBoard;
@@ -22,6 +22,8 @@ public class BoardManager : Manager
 
     private void Start()
     {
+        
+       
         SetupCamera();    
        
     }
@@ -43,48 +45,122 @@ public class BoardManager : Manager
         //Init the board arrays
         m_logicalBoard = new int[width, height];
         m_tilesOnBoard = new Tile[width, height];    
-        //m_matchedTiles = new List<Tile>();
+        m_matchedTiles = new List<Tile>();
+
+        Random.InitState((int)System.DateTime.Now.Ticks);
+
+        m_boardFillStrategy = new TextBasedBoardFillStrategy();
 
 
 
-        //Get the logical filled board data based on chosen fill method
-        m_logicalBoard = m_boardFillStrategy.GetFilledBoard(width, height);
 
-        //If we have a filled board from above step
-        if (m_logicalBoard != null)
+        //Fill the graphical board using logical board data
+        for (int i = 0; i < width; i++)
         {
-            //Fill the graphical board using logical board data
-            for (int i = 0; i < width; i++)
-            {
-                for (int j = 0; j < height; j++)
-                {
-                    //Get tile code
-                    int tileCode = m_logicalBoard[i, j];
+           for (int j = 0; j < height; j++)
+           {
+               
+                //Get the logical filled board data based on chosen fill method
+                int tileCode = m_boardFillStrategy.FillBoard(width, height, i, j, 0, false);
+                m_logicalBoard[i, j] = tileCode;
+                int x = 1;
 
-                    //Get the appropriate tile based on tile code
-                    Tile tile_to_place = m_tileManager.GetTileFromFactoryByCode(tileCode);
+                //while (CheckMatchOnFill(i, j))
+                //{
 
-                    //initialize the tile position
-                    tile_to_place.transform.position = new Vector2(i, j);
+                //    tileCode = m_boardFillStrategy.FillBoard(width, height, i, j, 0, true);
+                //    m_logicalBoard[i, j] = tileCode;
+                //    x++;
 
-                    //Place the tile on board
-                    PlaceTilesOnBoard(tile_to_place, tileCode, i, j);
+                //    if (x >= 100)
+                //    {
+                //        break;
+                //    }
+
+                //}
+
+                //Get tile code
+                m_logicalBoard[i, j] = tileCode;
+
+               //Get the appropriate tile based on tile code
+               Tile tile_to_place = m_tileManager.GetTileFromFactoryByCode(tileCode);
+
+               //initialize the tile position
+               tile_to_place.transform.position = new Vector2(i, j);
+
+                //Place the tile on board
+                PlaceTilesOnBoard(tile_to_place, tileCode, i, j);
 
 
-                }
+
 
             }
+
         }
 
-        else
-        {
-            Utils.DebugUtils.LogError("Board Dimensions are: Width = " + width + " Height = " + height);
-        }
-
-
-        
+        CheckForPossibleMatches();
+            
 
     }
+
+   
+
+    public bool CheckMatchOnFill(int x , int y)
+    {
+        bool matchFoundX = false;
+        bool matchFoundY = false;
+
+        for (int i = x; i >= (x-2); i--)
+        {
+            if(CheckBounds(i , y))
+            {
+                if (m_logicalBoard[x, y] == m_logicalBoard[i, y])
+                {
+                    matchFoundX = true;
+                }
+
+                else
+                {
+                    matchFoundX = false;
+                }
+            }
+
+            else
+            {
+                break;
+            }
+         
+        }
+
+
+        for (int i = y; i >= (y - 2); i--)
+        {
+            if(CheckBounds(x, i))
+            {
+                if (m_logicalBoard[x, y] == m_logicalBoard[x, i])
+                {
+                    matchFoundY = true;
+                }
+
+                else
+                {
+                    matchFoundY = false;
+                }
+            }
+
+            else
+            {
+                break;
+            }
+
+        }
+
+
+        return (matchFoundX || matchFoundY);
+
+
+    }
+
 
 
     public void CheckAllBoardForMatch()
@@ -106,7 +182,191 @@ public class BoardManager : Manager
 
 
 
+    public void CheckForPossibleMatches()
+    {
+        for (int i = 0; i < width ; i++)
+        {
+            for (int j = 0; j < height ; j++)
+            {
 
+                //Vector2 suggestedMove = GetNeighbours(i, j);
+
+
+                //if(suggestedMove != Vector2.zero)
+                //{
+                // HighlightMove(suggestedMove);
+                //break;
+                // }
+
+                GetNeighbours(i , j);
+
+               
+
+            }
+
+        }
+    }
+
+
+    public void HighlightMove(Vector2 suggestedMove)
+    {
+        m_tilesOnBoard[(int)suggestedMove.x, (int)suggestedMove.y].HighlightTile(true);
+    }
+
+
+    public void GetNeighbours(int x, int y)
+    {
+
+        Vector2 possibleMove = Vector2.zero;
+
+        if(CheckBounds(x - 1, y) && m_logicalBoard[x , y] == m_logicalBoard[x - 1, y])
+        {
+
+            possibleMove = GetPossibleMoveX(x, y, 1);   
+            
+            if(possibleMove != Vector2.zero)
+            {
+                HighlightMove(new Vector2(x, y));
+                HighlightMove(new Vector2(x - 1, y));
+                HighlightMove(possibleMove);
+            }
+
+            possibleMove = GetPossibleMoveX(x - 1, y , -1);
+
+            if (possibleMove != Vector2.zero)
+            {
+                HighlightMove(new Vector2(x, y));
+                HighlightMove(new Vector2(x - 1, y));
+                HighlightMove(possibleMove);
+            }
+
+
+        }
+
+
+
+        if (CheckBounds(x + 1, y) && m_logicalBoard[x, y] == m_logicalBoard[x + 1, y])
+        {
+            possibleMove = GetPossibleMoveX(x, y, -1);
+
+            if (possibleMove != Vector2.zero)
+            {
+                HighlightMove(new Vector2(x, y));
+                HighlightMove(new Vector2(x + 1, y));
+                HighlightMove(possibleMove);
+            }
+         
+           possibleMove = GetPossibleMoveX(x + 1, y, 1);
+
+            if (possibleMove != Vector2.zero)
+            {
+                HighlightMove(new Vector2(x, y));
+                HighlightMove(new Vector2(x + 1, y));
+                HighlightMove(possibleMove);
+            }
+
+        }
+
+
+
+
+        if (CheckBounds(x, y - 1) && m_logicalBoard[x , y] == m_logicalBoard[x, y - 1])
+        {
+            possibleMove = GetPossibleMoveY(x, y, 1);
+
+            if (possibleMove != Vector2.zero)
+            {
+                HighlightMove(new Vector2(x, y));
+                HighlightMove(new Vector2(x, y - 1));
+                HighlightMove(possibleMove);
+            }
+
+            possibleMove = GetPossibleMoveY(x, y - 1, -1);
+
+            if (possibleMove != Vector2.zero)
+            {
+                HighlightMove(new Vector2(x, y));
+                HighlightMove(new Vector2(x, y - 1));
+                HighlightMove(possibleMove);
+            }
+
+        }
+
+
+
+
+        if (CheckBounds(x, y + 1) && m_logicalBoard[x , y] == m_logicalBoard[x , y + 1])
+        {
+            possibleMove = GetPossibleMoveY(x, y, -1);
+
+            if (possibleMove != Vector2.zero)
+            {
+                HighlightMove(new Vector2(x, y));
+                HighlightMove(new Vector2(x, y + 1));
+                HighlightMove(possibleMove);
+            }
+      
+            possibleMove = GetPossibleMoveY(x, y + 1, 1);
+
+            if (possibleMove != Vector2.zero)
+            {
+                HighlightMove(new Vector2(x, y));
+                HighlightMove(new Vector2(x, y + 1));
+                HighlightMove(possibleMove);
+            }
+
+        }
+
+
+
+
+
+
+
+
+    }
+
+
+    public Vector2 GetPossibleMoveX(int x, int y, int direction)
+    {
+        //Right Up diagonal
+        if (CheckBounds(x + 1 * direction, y + 1 ) && m_logicalBoard[x, y] == m_logicalBoard[x + 1 * direction, y + 1])
+        {
+            return new Vector2(x + 1 * direction, y + 1);
+        }
+
+        //Rigght down diagonal
+        else if (CheckBounds(x + 1 * direction, y - 1 ) && m_logicalBoard[x, y] == m_logicalBoard[x + 1 * direction , y - 1 ])
+        {
+            return new Vector2(x + 1 * direction, y - 1);
+        }
+
+       
+         return Vector2.zero;
+        
+
+    }
+
+
+    public Vector2 GetPossibleMoveY(int x, int y, int direction)
+    {
+        //Right Up diagonal
+        if (CheckBounds(x - 1 , y + 1 * direction) && m_logicalBoard[x, y] == m_logicalBoard[x - 1 , y + 1 * direction])
+        {
+            return new Vector2(x - 1, y + 1 * direction);
+        }
+
+        //Rigght down diagonal
+        else if (CheckBounds(x + 1 , y + 1 * direction) && m_logicalBoard[x, y] == m_logicalBoard[x + 1, y + 1 * direction])
+        {
+            return new Vector2(x + 1, y + 1 * direction);
+        }
+
+
+        return Vector2.zero;
+
+
+    }
 
 
 
@@ -560,12 +820,18 @@ public class BoardManager : Manager
     /// <param name="matchedTiles"></param>
     public void ShowFoundMatches(ref List<Tile> matchedTiles)
     {
-        
-
-        for(int i = 0; i < matchedTiles.Count; i++)
+        //ADDED
+        if (matchedTiles.Count >= 3)
         {
-            matchedTiles[i].HighlightTile(true);
+
+            for (int i = 0; i < matchedTiles.Count; i++)
+            {
+                matchedTiles[i].HighlightTile(true);
+            }
         }
+      
+        
+       
 
 
         //StartCoroutine(ClearMatchedTiles(matchedTiles));
