@@ -219,24 +219,25 @@ public class BoardManager : Manager
 
         Vector2 possibleMove = Vector2.zero;
 
-        if(CheckBounds(x - 1, y) && m_logicalBoard[x , y] == m_logicalBoard[x - 1, y])
+        //Left
+        if (CheckBounds(x - 1, y) && m_logicalBoard[x, y] == m_logicalBoard[x - 1, y])
         {
 
-            possibleMove = GetPossibleMoveX(x, y, 1);   
-            
-            if(possibleMove != Vector2.zero)
-            {
-                HighlightMove(new Vector2(x, y));
-                HighlightMove(new Vector2(x - 1, y));
-                HighlightMove(possibleMove);
-            }
-
-            possibleMove = GetPossibleMoveX(x - 1, y , -1);
+            possibleMove = GetPossibleMoveX(x, y, 1);
 
             if (possibleMove != Vector2.zero)
             {
-                HighlightMove(new Vector2(x, y));
-                HighlightMove(new Vector2(x - 1, y));
+               // HighlightMove(new Vector2(x, y));
+               // HighlightMove(new Vector2(x - 1, y));
+                HighlightMove(possibleMove);
+            }
+
+            possibleMove = GetPossibleMoveX(x - 1, y, -1);
+
+            if (possibleMove != Vector2.zero)
+            {
+               // HighlightMove(new Vector2(x, y));
+               // HighlightMove(new Vector2(x - 1, y));
                 HighlightMove(possibleMove);
             }
 
@@ -244,24 +245,24 @@ public class BoardManager : Manager
         }
 
 
-
+        //Right
         if (CheckBounds(x + 1, y) && m_logicalBoard[x, y] == m_logicalBoard[x + 1, y])
         {
             possibleMove = GetPossibleMoveX(x, y, -1);
 
             if (possibleMove != Vector2.zero)
             {
-                HighlightMove(new Vector2(x, y));
-                HighlightMove(new Vector2(x + 1, y));
+                //HighlightMove(new Vector2(x, y));
+               // HighlightMove(new Vector2(x + 1, y));
                 HighlightMove(possibleMove);
             }
-         
-           possibleMove = GetPossibleMoveX(x + 1, y, 1);
+
+            possibleMove = GetPossibleMoveX(x + 1, y, 1);
 
             if (possibleMove != Vector2.zero)
             {
-                HighlightMove(new Vector2(x, y));
-                HighlightMove(new Vector2(x + 1, y));
+                //HighlightMove(new Vector2(x, y));
+               // HighlightMove(new Vector2(x + 1, y));
                 HighlightMove(possibleMove);
             }
 
@@ -269,15 +270,15 @@ public class BoardManager : Manager
 
 
 
-
-        if (CheckBounds(x, y - 1) && m_logicalBoard[x , y] == m_logicalBoard[x, y - 1])
+        //Down
+        if (CheckBounds(x, y - 1) && m_logicalBoard[x, y] == m_logicalBoard[x, y - 1])
         {
             possibleMove = GetPossibleMoveY(x, y, 1);
 
             if (possibleMove != Vector2.zero)
             {
-                HighlightMove(new Vector2(x, y));
-                HighlightMove(new Vector2(x, y - 1));
+               // HighlightMove(new Vector2(x, y));
+               // HighlightMove(new Vector2(x, y - 1));
                 HighlightMove(possibleMove);
             }
 
@@ -285,8 +286,8 @@ public class BoardManager : Manager
 
             if (possibleMove != Vector2.zero)
             {
-                HighlightMove(new Vector2(x, y));
-                HighlightMove(new Vector2(x, y - 1));
+               // HighlightMove(new Vector2(x, y));
+               // HighlightMove(new Vector2(x, y - 1));
                 HighlightMove(possibleMove);
             }
 
@@ -294,29 +295,107 @@ public class BoardManager : Manager
 
 
 
-
-        if (CheckBounds(x, y + 1) && m_logicalBoard[x , y] == m_logicalBoard[x , y + 1])
+        //Up
+        if (CheckBounds(x, y + 1) && m_logicalBoard[x, y] == m_logicalBoard[x, y + 1])
         {
             possibleMove = GetPossibleMoveY(x, y, -1);
 
             if (possibleMove != Vector2.zero)
             {
-                HighlightMove(new Vector2(x, y));
-                HighlightMove(new Vector2(x, y + 1));
+               // HighlightMove(new Vector2(x, y));
+               // HighlightMove(new Vector2(x, y + 1));
                 HighlightMove(possibleMove);
             }
-      
+
             possibleMove = GetPossibleMoveY(x, y + 1, 1);
 
             if (possibleMove != Vector2.zero)
             {
-                HighlightMove(new Vector2(x, y));
-                HighlightMove(new Vector2(x, y + 1));
+                //HighlightMove(new Vector2(x, y));
+               // HighlightMove(new Vector2(x, y + 1));
+                HighlightMove(possibleMove);
+            }
+
+            possibleMove = GetPossibleMoveYExtra(x, y, -1);
+
+            if (possibleMove != Vector2.zero)
+            {
+               // HighlightMove(new Vector2(x, y));
+               // HighlightMove(new Vector2(x, y + 1));
+                HighlightMove(possibleMove);
+            }
+
+            possibleMove = GetPossibleMoveYExtra(x, y + 1, 1);
+
+            if (possibleMove != Vector2.zero)
+            {
+               // HighlightMove(new Vector2(x, y));
+               // HighlightMove(new Vector2(x, y + 1));
                 HighlightMove(possibleMove);
             }
 
         }
 
+            //Left Up
+            if (CheckBounds(x - 1, y + 1) && m_logicalBoard[x, y] == m_logicalBoard[x - 1, y + 1])
+            {
+                possibleMove = GetPossibleMoveDiag(x, y, 1);
+
+                if (possibleMove != Vector2.zero)
+                {
+                    HighlightMove(new Vector2(x, y));
+                    //HighlightMove(new Vector2(x - 1, y + 1));
+                    //HighlightMove(possibleMove);
+                }
+
+            }
+
+
+
+            //Left Down
+            if (CheckBounds(x - 1, y - 1) && m_logicalBoard[x, y] == m_logicalBoard[x - 1, y - 1])
+            {
+                possibleMove = GetPossibleMoveDiag(x, y, -1);
+
+                if (possibleMove != Vector2.zero)
+                {
+                    HighlightMove(new Vector2(x, y));
+                   // HighlightMove(new Vector2(x - 1, y - 1));
+                   // HighlightMove(possibleMove);
+                }
+
+            }
+
+
+            //RightDown 
+            if (CheckBounds(x + 1, y - 1) && m_logicalBoard[x, y] == m_logicalBoard[x + 1, y - 1])
+            {
+                possibleMove = GetPossibleMoveDiag(x, y, 1);
+
+                if (possibleMove != Vector2.zero)
+                {
+                    HighlightMove(new Vector2(x, y));
+                   // HighlightMove(new Vector2(x + 1, y - 1));
+                    //HighlightMove(possibleMove);
+                }
+
+            }
+
+
+
+            //Right Up
+            if (CheckBounds(x + 1, y + 1) && m_logicalBoard[x, y] == m_logicalBoard[x + 1, y + 1])
+            {
+                possibleMove = GetPossibleMoveDiag(x, y, -1);
+
+                if (possibleMove != Vector2.zero)
+                {
+                    HighlightMove(new Vector2(x, y));
+                   // HighlightMove(new Vector2(x + 1, y + 1));
+                    //HighlightMove(possibleMove);
+                }
+
+            }
 
 
 
@@ -324,6 +403,9 @@ public class BoardManager : Manager
 
 
 
+
+
+        
     }
 
 
@@ -365,7 +447,39 @@ public class BoardManager : Manager
 
         return Vector2.zero;
 
+    }
 
+
+    public Vector2 GetPossibleMoveYExtra(int x, int y, int direction)
+    {
+        //Right Up/down 2 spaces
+        if (CheckBounds(x , y + 2 * direction) && m_logicalBoard[x, y] == m_logicalBoard[x , y + 2 * direction])
+        {
+            return new Vector2(x, y + 2 * direction);
+        }
+
+      
+        return Vector2.zero;
+
+    }
+
+
+
+    public Vector2 GetPossibleMoveDiag(int x, int y, int direction)
+    {
+        
+        if (CheckBounds(x - 1, y - 1 * direction) && m_logicalBoard[x, y] == m_logicalBoard[x - 1, y - 1 * direction])
+        {
+            return new Vector2(x - 1, y - 1 * direction);
+        }
+
+
+        else if (CheckBounds(x + 1 , y + 1 * direction) && m_logicalBoard[x, y] == m_logicalBoard[x + 1, y + 1 * direction])
+        {
+            return new Vector2(x + 1, y + 1 * direction);
+        }
+
+        return Vector2.zero;
     }
 
 
