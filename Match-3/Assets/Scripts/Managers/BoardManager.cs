@@ -14,6 +14,8 @@ public class BoardManager : Manager
     List<Tile> m_matchedTiles;
 
 
+    List<Vector2> possibleMoves = new List<Vector2>();
+
     public int width;
     public int height;
     public float cameraOffset;
@@ -49,7 +51,7 @@ public class BoardManager : Manager
 
         Random.InitState((int)System.DateTime.Now.Ticks);
 
-        m_boardFillStrategy = new TextBasedBoardFillStrategy();
+        m_boardFillStrategy = new RandomBoardFillStrategy();
 
 
 
@@ -65,19 +67,19 @@ public class BoardManager : Manager
                 m_logicalBoard[i, j] = tileCode;
                 int x = 1;
 
-                //while (CheckMatchOnFill(i, j))
-                //{
+                while (CheckMatchOnFill(i, j))
+                {
 
-                //    tileCode = m_boardFillStrategy.FillBoard(width, height, i, j, 0, true);
-                //    m_logicalBoard[i, j] = tileCode;
-                //    x++;
+                    tileCode = m_boardFillStrategy.FillBoard(width, height, i, j, 0, true);
+                    m_logicalBoard[i, j] = tileCode;
+                    x++;
 
-                //    if (x >= 100)
-                //    {
-                //        break;
-                //    }
+                    if (x >= 100)
+                    {
+                        break;
+                    }
 
-                //}
+                }
 
                 //Get tile code
                 m_logicalBoard[i, j] = tileCode;
@@ -98,22 +100,31 @@ public class BoardManager : Manager
 
         }
 
-        CheckForPossibleMatches();
+        SuggestMoves();
             
 
     }
 
    
-
+    /// <summary>
+    /// This function checks for matches as the board gets filled on initialize
+    /// </summary>
+    /// <param name="x">X position of tile</param>
+    /// <param name="y">Y position of tile</param>
+    /// <returns></returns>
     public bool CheckMatchOnFill(int x , int y)
     {
         bool matchFoundX = false;
         bool matchFoundY = false;
 
+        //We fill the board from bottom-left so we only need to check 2-left & 2-down neighbours for matches
+        //Check for 2-left neighbours of the current tile at x,y
         for (int i = x; i >= (x-2); i--)
         {
+            //If within board boundary
             if(CheckBounds(i , y))
             {
+                //Check for match
                 if (m_logicalBoard[x, y] == m_logicalBoard[i, y])
                 {
                     matchFoundX = true;
@@ -125,6 +136,7 @@ public class BoardManager : Manager
                 }
             }
 
+            //Break if outside boundary
             else
             {
                 break;
@@ -132,7 +144,7 @@ public class BoardManager : Manager
          
         }
 
-
+        //Check for 2-down neighbours of the current tile at x,y
         for (int i = y; i >= (y - 2); i--)
         {
             if(CheckBounds(x, i))
@@ -155,7 +167,7 @@ public class BoardManager : Manager
 
         }
 
-
+        //if either 2 left or 2 down are matching , then return match found
         return (matchFoundX || matchFoundY);
 
 
@@ -181,43 +193,37 @@ public class BoardManager : Manager
 
 
 
-
-    public void CheckForPossibleMatches()
+    /// <summary>
+    /// This function is responsible for suggesting possible moves to the player
+    /// </summary>
+    public void SuggestMoves()
     {
+        //For all tiles
         for (int i = 0; i < width ; i++)
         {
             for (int j = 0; j < height ; j++)
             {
-
-                //Vector2 suggestedMove = GetNeighbours(i, j);
-
-
-                //if(suggestedMove != Vector2.zero)
-                //{
-                // HighlightMove(suggestedMove);
-                //break;
-                // }
-
-                GetNeighbours(i , j);
-
-               
-
+                //Get a 3x3 matrix of neighbours 
+                GetNeighbours(i , j);            
             }
 
         }
+
+        GetRandomSuggestedMove(2);
     }
 
 
-    public void HighlightMove(Vector2 suggestedMove)
-    {
-        m_tilesOnBoard[(int)suggestedMove.x, (int)suggestedMove.y].HighlightTile(true);
-    }
-
-
+   
+    /// <summary>
+    /// This function iterates through 3x3 matrix of adjacent neighbours of tile at x,y
+    /// </summary>
+    /// <param name="x"></param>
+    /// <param name="y"></param>
     public void GetNeighbours(int x, int y)
     {
-
         Vector2 possibleMove = Vector2.zero;
+
+      
 
         //Left
         if (CheckBounds(x - 1, y) && m_logicalBoard[x, y] == m_logicalBoard[x - 1, y])
@@ -227,18 +233,26 @@ public class BoardManager : Manager
 
             if (possibleMove != Vector2.zero)
             {
-               // HighlightMove(new Vector2(x, y));
-               // HighlightMove(new Vector2(x - 1, y));
-                HighlightMove(possibleMove);
+                //HighlightMove(new Vector2(x, y));
+                //HighlightMove(new Vector2(x - 1, y));
+                // HighlightMove(possibleMove);
+
+                possibleMoves.Add(new Vector2(x, y));
+                possibleMoves.Add(new Vector2(x - 1, y));
+                possibleMoves.Add(possibleMove);
             }
 
             possibleMove = GetPossibleMoveX(x - 1, y, -1);
 
             if (possibleMove != Vector2.zero)
             {
-               // HighlightMove(new Vector2(x, y));
-               // HighlightMove(new Vector2(x - 1, y));
-                HighlightMove(possibleMove);
+                //HighlightMove(new Vector2(x, y));
+                //HighlightMove(new Vector2(x - 1, y));
+                // HighlightMove(possibleMove);
+
+                possibleMoves.Add(new Vector2(x, y));
+                possibleMoves.Add(new Vector2(x - 1, y));
+                possibleMoves.Add(possibleMove);
             }
 
 
@@ -252,18 +266,27 @@ public class BoardManager : Manager
 
             if (possibleMove != Vector2.zero)
             {
-                //HighlightMove(new Vector2(x, y));
+               // HighlightMove(new Vector2(x, y));
                // HighlightMove(new Vector2(x + 1, y));
-                HighlightMove(possibleMove);
+              //  HighlightMove(possibleMove);
+
+                possibleMoves.Add(new Vector2(x, y));
+                possibleMoves.Add(new Vector2(x + 1, y));
+                possibleMoves.Add(possibleMove);
             }
 
             possibleMove = GetPossibleMoveX(x + 1, y, 1);
 
             if (possibleMove != Vector2.zero)
             {
-                //HighlightMove(new Vector2(x, y));
+               // HighlightMove(new Vector2(x, y));
                // HighlightMove(new Vector2(x + 1, y));
-                HighlightMove(possibleMove);
+               // HighlightMove(possibleMove);
+
+                possibleMoves.Add(new Vector2(x, y));
+                possibleMoves.Add(new Vector2(x + 1, y));
+                possibleMoves.Add(possibleMove);
+               
             }
 
         }
@@ -279,7 +302,11 @@ public class BoardManager : Manager
             {
                // HighlightMove(new Vector2(x, y));
                // HighlightMove(new Vector2(x, y - 1));
-                HighlightMove(possibleMove);
+               // HighlightMove(possibleMove);
+
+                possibleMoves.Add(new Vector2(x, y));
+                possibleMoves.Add(new Vector2(x, y - 1));
+                possibleMoves.Add(possibleMove);
             }
 
             possibleMove = GetPossibleMoveY(x, y - 1, -1);
@@ -288,7 +315,11 @@ public class BoardManager : Manager
             {
                // HighlightMove(new Vector2(x, y));
                // HighlightMove(new Vector2(x, y - 1));
-                HighlightMove(possibleMove);
+               // HighlightMove(possibleMove);
+
+                possibleMoves.Add(new Vector2(x, y));
+                possibleMoves.Add(new Vector2(x, y - 1));
+                possibleMoves.Add(possibleMove);
             }
 
         }
@@ -304,7 +335,10 @@ public class BoardManager : Manager
             {
                // HighlightMove(new Vector2(x, y));
                // HighlightMove(new Vector2(x, y + 1));
-                HighlightMove(possibleMove);
+               // HighlightMove(possibleMove);
+                possibleMoves.Add(new Vector2(x, y));
+                possibleMoves.Add(new Vector2(x, y + 1));
+                possibleMoves.Add(possibleMove);
             }
 
             possibleMove = GetPossibleMoveY(x, y + 1, 1);
@@ -312,26 +346,39 @@ public class BoardManager : Manager
             if (possibleMove != Vector2.zero)
             {
                 //HighlightMove(new Vector2(x, y));
-               // HighlightMove(new Vector2(x, y + 1));
-                HighlightMove(possibleMove);
+                // HighlightMove(new Vector2(x, y + 1));
+                //HighlightMove(possibleMove);
+
+                possibleMoves.Add(new Vector2(x, y));
+                possibleMoves.Add(new Vector2(x, y + 1));
+                possibleMoves.Add(possibleMove);
             }
 
             possibleMove = GetPossibleMoveYExtra(x, y, -1);
 
             if (possibleMove != Vector2.zero)
             {
-               // HighlightMove(new Vector2(x, y));
-               // HighlightMove(new Vector2(x, y + 1));
-                HighlightMove(possibleMove);
+                // HighlightMove(new Vector2(x, y));
+                // HighlightMove(new Vector2(x, y + 1));
+                //HighlightMove(possibleMove);
+
+                possibleMoves.Add(new Vector2(x, y));
+                possibleMoves.Add(new Vector2(x, y + 1));
+                possibleMoves.Add(possibleMove);
+
             }
 
             possibleMove = GetPossibleMoveYExtra(x, y + 1, 1);
 
             if (possibleMove != Vector2.zero)
             {
-               // HighlightMove(new Vector2(x, y));
-               // HighlightMove(new Vector2(x, y + 1));
-                HighlightMove(possibleMove);
+                // HighlightMove(new Vector2(x, y));
+                // HighlightMove(new Vector2(x, y + 1));
+                // HighlightMove(possibleMove);
+
+                possibleMoves.Add(new Vector2(x, y));
+                possibleMoves.Add(new Vector2(x, y + 1));
+                possibleMoves.Add(possibleMove);
             }
 
         }
@@ -343,9 +390,14 @@ public class BoardManager : Manager
 
                 if (possibleMove != Vector2.zero)
                 {
-                    HighlightMove(new Vector2(x, y));
+                    //HighlightMove(new Vector2(x, y));
                     //HighlightMove(new Vector2(x - 1, y + 1));
                     //HighlightMove(possibleMove);
+
+                    possibleMoves.Add(new Vector2(x, y));
+                    possibleMoves.Add(new Vector2(x - 1, y + 1));
+                    possibleMoves.Add(possibleMove);
+
                 }
 
             }
@@ -359,9 +411,13 @@ public class BoardManager : Manager
 
                 if (possibleMove != Vector2.zero)
                 {
-                    HighlightMove(new Vector2(x, y));
+                    //HighlightMove(new Vector2(x, y));
                    // HighlightMove(new Vector2(x - 1, y - 1));
                    // HighlightMove(possibleMove);
+                   
+                    possibleMoves.Add(new Vector2(x, y));
+                    possibleMoves.Add(new Vector2(x - 1, y - 1));
+                    possibleMoves.Add(possibleMove);
                 }
 
             }
@@ -374,13 +430,16 @@ public class BoardManager : Manager
 
                 if (possibleMove != Vector2.zero)
                 {
-                    HighlightMove(new Vector2(x, y));
+                    //HighlightMove(new Vector2(x, y));
                    // HighlightMove(new Vector2(x + 1, y - 1));
                     //HighlightMove(possibleMove);
+
+                    possibleMoves.Add(new Vector2(x, y));
+                    possibleMoves.Add(new Vector2(x + 1, y - 1));
+                    possibleMoves.Add(possibleMove);
                 }
 
             }
-
 
 
             //Right Up
@@ -390,36 +449,101 @@ public class BoardManager : Manager
 
                 if (possibleMove != Vector2.zero)
                 {
-                    HighlightMove(new Vector2(x, y));
+                    //HighlightMove(new Vector2(x, y));
                    // HighlightMove(new Vector2(x + 1, y + 1));
                     //HighlightMove(possibleMove);
+
+                    possibleMoves.Add(new Vector2(x, y));
+                    possibleMoves.Add(new Vector2(x + 1, y + 1));
+                    possibleMoves.Add(possibleMove);
                 }
 
             }
 
-
-
-
-
-
-
-
-
+          
         
     }
 
+    /// <summary>
+    /// This function gets a random move to suggest
+    /// </summary>
+    /// <param name="numberOfMoves">Number of moves to suggest to user</param>
+    public void GetRandomSuggestedMove(int numberOfMoves)
+    {
 
+        if (possibleMoves.Count < 3)
+        {
+            return;
+        }
+
+        int prevRand = -1;
+        int rand;
+        int randIndex = 0;
+
+        if(numberOfMoves >= (possibleMoves.Count / 3))
+        {
+            numberOfMoves = 1;
+        }
+
+        for(int i = 0; i < numberOfMoves; i++)
+        {
+                
+            rand = Random.Range(0, (possibleMoves.Count / 3)); 
+            
+            while(rand == prevRand)
+            {
+                rand = Random.Range(0, (possibleMoves.Count / 3));
+            }
+
+
+            randIndex = rand * 3;
+
+            //Utils.DebugUtils.Log("COunt: " + possibleMoves.Count + " Number of moves: "+ numberOfMoves);
+            //Utils.DebugUtils.Log("Rand: " + rand);
+            //Utils.DebugUtils.Log("RandIndex: " + randIndex);
+
+            for (int k = randIndex; k < randIndex + 3; k++)
+            {
+                HighlightMove(possibleMoves[k]);
+            }
+
+            randIndex = 0;
+            prevRand = rand;
+        }
+
+      
+    }
+
+
+    /// <summary>
+    /// Highlights a given tile
+    /// </summary>
+    /// <param name="suggestedMove"></param>
+    public void HighlightMove(Vector2 suggestedMove)
+    {
+        m_tilesOnBoard[(int)suggestedMove.x, (int)suggestedMove.y].HighlightTile(true);
+    }
+
+
+
+    //Row wise move check
+    //    X       X
+    //     0 X X 0
+    //    X       X
+    //
     public Vector2 GetPossibleMoveX(int x, int y, int direction)
     {
         //Right Up diagonal
         if (CheckBounds(x + 1 * direction, y + 1 ) && m_logicalBoard[x, y] == m_logicalBoard[x + 1 * direction, y + 1])
         {
+           
             return new Vector2(x + 1 * direction, y + 1);
         }
 
-        //Rigght down diagonal
+        //Right down diagonal
         else if (CheckBounds(x + 1 * direction, y - 1 ) && m_logicalBoard[x, y] == m_logicalBoard[x + 1 * direction , y - 1 ])
         {
+            
             return new Vector2(x + 1 * direction, y - 1);
         }
 
@@ -430,6 +554,13 @@ public class BoardManager : Manager
     }
 
 
+    //Col wise move check
+    //
+    //  X 0 X 
+    //    X
+    //    X
+    //  X 0 X
+    // 
     public Vector2 GetPossibleMoveY(int x, int y, int direction)
     {
         //Right Up diagonal
@@ -450,6 +581,11 @@ public class BoardManager : Manager
     }
 
 
+    //Special Col wise case check 
+    // X    X
+    // 0    X
+    // X    0
+    // X    X
     public Vector2 GetPossibleMoveYExtra(int x, int y, int direction)
     {
         //Right Up/down 2 spaces
@@ -457,14 +593,18 @@ public class BoardManager : Manager
         {
             return new Vector2(x, y + 2 * direction);
         }
-
       
         return Vector2.zero;
 
     }
 
 
-
+    //Special case diagonal move check
+    //  X 0 X
+    //    X
+    //
+    //    X
+    //  X 0 X
     public Vector2 GetPossibleMoveDiag(int x, int y, int direction)
     {
         
@@ -1094,7 +1234,7 @@ public class BoardManager : Manager
     public void Collapse(int X, int Y)
     {
         
-         //We need to move all pieces above all of the cleared tiles by 1 row
+         //We need to move all pieces above all of the cleared tiles down by 1 row
         for (int y = Y; y < height - 1; y++)
         {
            m_tilesOnBoard[X, y + 1].tileGraphics.tileFalling = true;
