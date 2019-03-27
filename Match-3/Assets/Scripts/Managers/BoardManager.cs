@@ -137,6 +137,7 @@ public class BoardManager : Manager
     public void PlaceTilesOnBoard(Tile tile_to_place, int tileCode, int x, int y)
     {
        
+        
         //Set tile coordinates
         tile_to_place.tileData.X = x;
         tile_to_place.tileData.Y = y;
@@ -144,18 +145,24 @@ public class BoardManager : Manager
         //Set name in coordinate style for easy debugging of game objects
         tile_to_place.gameObject.name = " Tile (" + x + "," + y + ")";
 
-        //Clean up visuals
-        tile_to_place.transform.parent = this.transform;
+      
+      
 
         tile_to_place.HighlightTile(false);
 
         //When clearing tiles, empty space has tilecode 0 which are de-activated tiles
         if (tileCode != 0)
         {
+            //Clean up visuals
+            tile_to_place.transform.parent = this.transform;
             tile_to_place.gameObject.SetActive(true);
-            
         }
-        
+
+        else
+        {
+            tile_to_place.transform.position = new Vector2(x, y);
+        }
+
 
         //Logically & graphically place the tiles on board
         m_logicalBoard[x, y] = tileCode;
@@ -172,13 +179,14 @@ public class BoardManager : Manager
     /// <param name="targetTileIndex">Destination Index / coordinate of 2nd tile to swap/move to</param>
     public void SwapTilesOnBoard(Vector2 startTileIndex, Vector2 targetTileIndex)
     {
+        int startTileCode = m_logicalBoard[(int)startTileIndex.x, (int)startTileIndex.y];
+        int destTileCode = m_logicalBoard[(int)targetTileIndex.x, (int)targetTileIndex.y];
 
         //Get the graphical tiles to swap from the board
         Tile startTile = m_tilesOnBoard[(int)startTileIndex.x, (int)startTileIndex.y];
         Tile destTile = m_tilesOnBoard[(int)targetTileIndex.x, (int)targetTileIndex.y];
 
-        int startTileCode = m_logicalBoard[(int)startTileIndex.x, (int)startTileIndex.y];
-        int destTileCode = m_logicalBoard[(int)targetTileIndex.x, (int)targetTileIndex.y]; 
+       
 
         PlaceTilesOnBoard(startTile, startTileCode, (int)targetTileIndex.x, (int)targetTileIndex.y);
         PlaceTilesOnBoard(destTile, destTileCode, (int)startTileIndex.x, (int)startTileIndex.y);
@@ -577,7 +585,7 @@ public class BoardManager : Manager
 
 
         //StartCoroutine(ClearMatchedTiles(matchedTiles));
-        ClearMatchedTiles(matchedTiles);
+        //ClearMatchedTiles(matchedTiles);
       
     }
 
@@ -585,16 +593,21 @@ public class BoardManager : Manager
 
 
     //TODO: Clear tiles at index function for later bonus abilities
-    public void ClearMatchedTiles(List<Tile> matchedTiles)
+    public void ClearTiles()
     {
      
+        if(m_matchedTiles == null)
+        {
+            return;
+        }
+
         //Clear Tiles
-        for (int i = 0; i < matchedTiles.Count; i++)
+        for (int i = 0; i < m_matchedTiles.Count; i++)
         {
             //yield return new WaitForSeconds(0.2f);
 
-            int x = matchedTiles[i].tileData.X;
-            int y = matchedTiles[i].tileData.Y;
+            int x = m_matchedTiles[i].tileData.X;
+            int y = m_matchedTiles[i].tileData.Y;
 
                 
             //Make it Empty tile
@@ -603,35 +616,51 @@ public class BoardManager : Manager
             //Clear Tile
             m_tilesOnBoard[x, y].OnDeSpawnTile();
 
-          
 
         }
 
-        for (int i = 0; i < matchedTiles.Count; i++)
-        {
-    
-            //We need to move all pieces above all of the cleared tiles by 1 row
-            for (int y = matchedTiles[i].tileData.Y; y < height - 1; y++)
-            {
-               
-                m_tileManager.AnimateTile(m_tilesOnBoard[matchedTiles[i].tileData.X, y + 1], new Vector2(matchedTiles[i].tileData.X, y), 0.5f);
-                SwapTilesOnBoard(new Vector2(matchedTiles[i].tileData.X, y + 1), new Vector2(matchedTiles[i].tileData.X, y));
+        //for (int i = 0; i < m_matchedTiles.Count; i++)
+        //{
 
-            }
+        //    //We need to move all pieces above all of the cleared tiles by 1 row
+        //    for (int y = m_matchedTiles[i].tileData.Y; y < height - 1; y++)
+        //    {
 
-        }
+        //        m_tileManager.AnimateTile(m_tilesOnBoard[m_matchedTiles[i].tileData.X, y + 1], new Vector2(m_matchedTiles[i].tileData.X, y), 0.5f, true);
+        //        SwapTilesOnBoard(new Vector2(m_matchedTiles[i].tileData.X, y + 1), new Vector2(m_matchedTiles[i].tileData.X, y));
 
 
+        //    }
 
-        
+        //}
 
-        print("End");
-
-        
-
+        StartCoroutine(Collapse());
+            
 
     }
 
+
+    public IEnumerator Collapse()
+    {
+        for (int i = 0; i < m_matchedTiles.Count; i++)
+        {
+
+            //We need to move all pieces above all of the cleared tiles by 1 row
+            for (int y = m_matchedTiles[i].tileData.Y; y < height - 1; y++)
+            {
+
+                m_tileManager.AnimateTile(m_tilesOnBoard[m_matchedTiles[i].tileData.X, y + 1], new Vector2(m_matchedTiles[i].tileData.X, y), 0.3f, true);
+               
+                SwapTilesOnBoard(new Vector2(m_matchedTiles[i].tileData.X, y + 1), new Vector2(m_matchedTiles[i].tileData.X, y));
+
+                yield return new WaitForEndOfFrame();
+            }
+
+            //yield return new WaitForSeconds(0.05f);
+        }
+
+        print("End");
+    }
 
     public void SetupCamera()
     {

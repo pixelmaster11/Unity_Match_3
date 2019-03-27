@@ -24,6 +24,7 @@ public abstract class Tile : MonoBehaviour
         HighlightTile(false);
         this.gameObject.SetActive(false);
         this.transform.parent = m_tileManager.transform;
+        this.tileGraphics.swapAnimating = false;
         //this.gameObject.name = "Cleared Tile";
     }
 
@@ -82,11 +83,11 @@ public abstract class Tile : MonoBehaviour
     /// </summary>
     /// <param name="dest">Destination position this tile will move to</param>
     /// <param name="animTime">Time take for this tile to move from current position to destination position</param>
-    public void Animate(Vector2 dest, float animTime)
+    public void Animate(Vector2 dest, float animTime, bool cleared)
     {
         if(gameObject.activeInHierarchy)
         {
-            StartCoroutine(AnimateTileMovement(dest, animTime));
+            StartCoroutine(AnimateTileMovement(dest, animTime, cleared));
         }
        
     }
@@ -98,13 +99,13 @@ public abstract class Tile : MonoBehaviour
     /// <param name="destination"></param>
     /// <param name="animateTime"></param>
     /// <returns></returns>
-    private IEnumerator AnimateTileMovement(Vector2 destination, float animateTime)
+    private IEnumerator AnimateTileMovement(Vector2 destination, float animateTime, bool cleared)
     {
         //If this tile is already or still moving to destination but this is not the clearing animation
-        //If clearing animation after clearing tiles then fall immediately
-        if(tileGraphics.swapAnimating)
+
+
+        if (tileGraphics.swapAnimating)
         {
-            //Then wait till it completes the movement then proceed
             yield return new WaitForSeconds(animateTime);
         }
 
@@ -113,13 +114,18 @@ public abstract class Tile : MonoBehaviour
         bool reachedDestination = false;
         float timeElapsed = 0;
 
+       
+
         while(!reachedDestination)
         {
-            if((destination - (Vector2)transform.position).SqrMagnitude() <= 0.0001f)
+           
+            if ((destination - (Vector2)transform.position).sqrMagnitude <= 0.0001f)
             {
                 reachedDestination = true;
-                transform.position = destination;
                 tileGraphics.swapAnimating = false;
+                transform.position = destination;
+                
+                
             }
 
             timeElapsed += Time.deltaTime;
@@ -129,10 +135,13 @@ public abstract class Tile : MonoBehaviour
             ///t = t * t * t * (t * (t * 6 - 15) + 10);
 
             transform.position = Vector2.Lerp(startPos, destination, t);
-            
+
+            //startPos = transform.position;
 
             yield return null;
         }
+
+        //tileGraphics.swapAnimating = false;
 
     }
 

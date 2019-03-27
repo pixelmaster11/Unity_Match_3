@@ -99,9 +99,7 @@ public class TileManager : Manager
             AdjacencyCheck();
         }
 
-        //Release the tiles
-        m_clickedTile = null;
-        m_targetTile = null;
+      
     }
 
 
@@ -112,6 +110,7 @@ public class TileManager : Manager
     /// </summary>
     public void AdjacencyCheck()
     {
+    
         Vector2 startIndex = new Vector2(m_clickedTile.tileData.X, m_clickedTile.tileData.Y);
         Vector2 targetIndex = new Vector2(m_targetTile.tileData.X, m_targetTile.tileData.Y);
 
@@ -122,31 +121,7 @@ public class TileManager : Manager
             //Swap Tiles
             //Utils.DebugUtils.Log("Clicked Tile: " + m_clickedTile.name + " & Target Tile : " + m_targetTile + " are adjacent and can be swapped");
 
-            //If adjacent then swap tiles on the board
-            m_boardManager.SwapTilesOnBoard(startIndex, targetIndex);
-
-            //Animate Swap      
-            AnimateTile(m_clickedTile, targetIndex, 0f);
-            AnimateTile(m_targetTile, startIndex, 0f);
-
-            //No Match Found // Move Tiles back to their original position before swap
-            if (!m_boardManager.FindMatch(startIndex, targetIndex, true))
-            {
-                //Swap back if no match
-                m_boardManager.SwapTilesOnBoard(targetIndex, startIndex);
-
-                //Animate tiles again to their previous positions
-                AnimateTile(m_clickedTile, startIndex, 0.3f);
-                AnimateTile(m_targetTile, targetIndex, 0.3f);
-
-
-            }
-
-            else
-            {
-               // m_boardManager.CheckAllBoardForMatch();
-            }
-
+            StartCoroutine(SwapTiles(startIndex, targetIndex));
         }
 
         //Debug if tiles not adjacent
@@ -158,10 +133,58 @@ public class TileManager : Manager
     }
 
 
-    public void AnimateTile(Tile tile, Vector2 destination, float animationTime)
+    private IEnumerator SwapTiles(Vector2 startIndex, Vector2 targetIndex)
+    {
+       
+
+        //Animate Swap      
+        AnimateTile(m_clickedTile, targetIndex, 0.3f);
+        AnimateTile(m_targetTile, startIndex, 0.3f);
+  
+
+        yield return new WaitForSeconds(0.3f);
+
+        //If adjacent then swap tiles on the board
+        m_boardManager.SwapTilesOnBoard(startIndex, targetIndex);
+
+        //No Match Found // Move Tiles back to their original position before swap
+        if (!m_boardManager.FindMatch(startIndex, targetIndex, true))
+        {
+            print("no matches");
+
+            //Animate tiles again to their previous positions
+            AnimateTile(m_clickedTile, startIndex, 0.3f);
+            AnimateTile(m_targetTile, targetIndex, 0.3f);
+
+            //yield return new WaitForSeconds(0.3f);
+
+            //Swap back if no match
+            m_boardManager.SwapTilesOnBoard(targetIndex, startIndex);
+
+           
+
+
+        }
+
+        else
+        {
+            yield return new WaitForSeconds(0.3f);
+            m_boardManager.ClearTiles();
+            // m_boardManager.CheckAllBoardForMatch();
+        }
+
+        //Release the tiles
+        m_clickedTile = null;
+        m_targetTile = null;
+    }
+
+
+    
+
+    public void AnimateTile(Tile tile, Vector2 destination, float animationTime, bool cleared = false)
     {
         
-        tile.Animate(destination, animationTime);
+        tile.Animate(destination, animationTime, cleared);
     }
 
 
