@@ -130,7 +130,7 @@ public abstract class Tile : MonoBehaviour
                 reachedDestination = true;
                 tileGraphics.swapAnimating = false;
                 tileGraphics.tileFalling = false;
-                transform.position = destination;
+                transform.position = new Vector2((int)destination.x , (int)destination.y);
                 
                 
             }

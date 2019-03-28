@@ -8,6 +8,7 @@ public class BoardManager : Manager
     [SerializeField]
     private TileManager m_tileManager;
     private IBoardFillStrategy m_boardFillStrategy;
+    private IBoardShuffleStrategy m_boardShuffleStrategy;
 
     private int[,] m_logicalBoard;
     private Tile[,] m_tilesOnBoard;
@@ -64,6 +65,7 @@ public class BoardManager : Manager
                
                 //Get the logical filled board data based on chosen fill method
                 int tileCode = m_boardFillStrategy.FillBoard(width, height, i, j, 0, false);
+
                 m_logicalBoard[i, j] = tileCode;
                 int x = 1;
 
@@ -87,8 +89,16 @@ public class BoardManager : Manager
                //Get the appropriate tile based on tile code
                Tile tile_to_place = m_tileManager.GetTileFromFactoryByCode(tileCode);
 
+                //Activate so we can animate tile
+                tile_to_place.gameObject.SetActive(true);
+
+                //Animate tile on start
+                m_tileManager.AnimateTile(tile_to_place, new Vector2(i, j), 1f);
+
+                
+
                //initialize the tile position
-               tile_to_place.transform.position = new Vector2(i, j);
+               //tile_to_place.transform.position = new Vector2(i, j);
 
                 //Place the tile on board
                 PlaceTilesOnBoard(tile_to_place, tileCode, i, j);
@@ -100,7 +110,7 @@ public class BoardManager : Manager
 
         }
 
-        SuggestMoves();
+        //SuggestMoves();
             
 
     }
@@ -210,8 +220,40 @@ public class BoardManager : Manager
         }
 
         GetRandomSuggestedMove(2);
+
+       
     }
 
+
+    public void ShuffleBoard()
+    {
+        System.Random rand = new System.Random();
+
+        m_boardShuffleStrategy = new SimpleBoardShuffle();
+
+        m_boardShuffleStrategy.ShuffleBoard(ref m_logicalBoard, ref m_tilesOnBoard, this, m_tileManager);
+
+        //for (int i = 0; i < width; i++)
+        //{
+
+        //    for (int j = 0; j < height; j++)
+        //    {
+
+        //        int x = i + rand.Next(width - i);
+        //        int y = j + rand.Next(height - j);
+
+        //        m_tileManager.AnimateTile(m_tilesOnBoard[x, y], new Vector2(i, j), 1f);
+        //        SwapTilesOnBoard(new Vector2(x, y), new Vector2(i, j));
+
+        //    }
+
+        //}
+
+
+
+
+
+    }
 
    
     /// <summary>
@@ -654,8 +696,10 @@ public class BoardManager : Manager
             //Clean up visuals
             tile_to_place.transform.parent = this.transform;
             tile_to_place.gameObject.SetActive(true);
+          
         }
 
+        //If tilecode = 0
         else
         {
             tile_to_place.transform.position = new Vector2(x, y);

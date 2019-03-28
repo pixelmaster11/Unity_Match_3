@@ -141,14 +141,13 @@ public class TileManager : Manager
         AnimateTile(m_clickedTile, targetIndex, m_clickedTile.tileGraphics.tileSwapSpeed);
         AnimateTile(m_targetTile, startIndex, m_targetTile.tileGraphics.tileSwapSpeed);
 
-
         yield return new WaitForSeconds(m_targetTile.tileGraphics.tileSwapSpeed);
 
         //If adjacent then swap tiles on the board
         m_boardManager.SwapTilesOnBoard(startIndex, targetIndex);
 
-
        
+
 
         //No Match Found // Move Tiles back to their original position before swap
         if (!m_boardManager.FindMatch(startIndex, targetIndex, true))
@@ -164,8 +163,8 @@ public class TileManager : Manager
             //Swap back if no match
             m_boardManager.SwapTilesOnBoard(targetIndex, startIndex);
 
-           
 
+          
 
         }
 
