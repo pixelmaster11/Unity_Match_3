@@ -26,5 +26,7 @@ public class SimpleBoardShuffle : IBoardShuffleStrategy
             }
 
         }
+
+
     }
 }

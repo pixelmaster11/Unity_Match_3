@@ -551,7 +551,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   m_tileManager: {fileID: 166319981}
   width: 10
-  height: 10
+  height: 12
   cameraOffset: 1
 --- !u!4 &727542323
 Transform:

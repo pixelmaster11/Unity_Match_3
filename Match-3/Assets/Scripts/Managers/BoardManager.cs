@@ -69,6 +69,7 @@ public class BoardManager : Manager
                 m_logicalBoard[i, j] = tileCode;
                 int x = 1;
 
+                //while no matches on fill
                 while (CheckMatchOnFill(i, j))
                 {
 
@@ -227,31 +228,12 @@ public class BoardManager : Manager
 
     public void ShuffleBoard()
     {
-        System.Random rand = new System.Random();
+        Random.InitState((int)System.DateTime.Now.Ticks);
 
         m_boardShuffleStrategy = new SimpleBoardShuffle();
 
         m_boardShuffleStrategy.ShuffleBoard(ref m_logicalBoard, ref m_tilesOnBoard, this, m_tileManager);
-
-        //for (int i = 0; i < width; i++)
-        //{
-
-        //    for (int j = 0; j < height; j++)
-        //    {
-
-        //        int x = i + rand.Next(width - i);
-        //        int y = j + rand.Next(height - j);
-
-        //        m_tileManager.AnimateTile(m_tilesOnBoard[x, y], new Vector2(i, j), 1f);
-        //        SwapTilesOnBoard(new Vector2(x, y), new Vector2(i, j));
-
-        //    }
-
-        //}
-
-
-
-
+   
 
     }
 
