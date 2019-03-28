@@ -47,6 +47,7 @@ public abstract class Tile : MonoBehaviour
         m_tileManager.ClickedTile(this);
     }
 
+
     public void OnMouseEnter()
     {
         //Tile Activated
@@ -93,6 +94,7 @@ public abstract class Tile : MonoBehaviour
                 StopAllCoroutines();
             }
 
+            //Utils.DebugUtils.Log(this.gameObject.name + " Destination: " + dest);
             StartCoroutine(AnimateTileMovement(dest, animTime));
         }
        
@@ -139,18 +141,16 @@ public abstract class Tile : MonoBehaviour
              
             float t = timeElapsed / animateTime;
 
-            //t = t * t * t * (t * (t * 6 - 15) + 10);
-
             t = Mathf.Clamp01(animationCurve.Evaluate(t));
 
             transform.position = Vector2.Lerp(startPos, destination, t);
 
-            //startPos = transform.position;
+            
 
             yield return null;
         }
 
-        //tileGraphics.swapAnimating = false;
+       
 
     }
 

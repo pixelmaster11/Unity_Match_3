@@ -67,9 +67,11 @@ public class BoardManager : Manager
                 int tileCode = m_boardFillStrategy.FillBoard(width, height, i, j, 0, false);
 
                 m_logicalBoard[i, j] = tileCode;
+
                 int x = 1;
 
-                //while no matches on fill
+                //while there are matches on fill
+                //Get new tile
                 while (CheckMatchOnFill(i, j))
                 {
 
@@ -111,7 +113,8 @@ public class BoardManager : Manager
 
         }
 
-        //SuggestMoves();
+
+       
             
 
     }
@@ -225,7 +228,9 @@ public class BoardManager : Manager
        
     }
 
-
+    /// <summary>
+    /// This function shuffles the board based on chosen shuffling strategy
+    /// </summary>
     public void ShuffleBoard()
     {
         Random.InitState((int)System.DateTime.Now.Ticks);
@@ -1122,7 +1127,7 @@ public class BoardManager : Manager
 
 
 
-    //TODO: Clear tiles at index function for later bonus abilities
+    
     public void ClearTiles()
     {
      
@@ -1134,8 +1139,7 @@ public class BoardManager : Manager
         //Clear Tiles
         for (int i = 0; i < m_matchedTiles.Count; i++)
         {
-            //yield return new WaitForSeconds(0.2f);
-
+            
             int x = m_matchedTiles[i].tileData.X;
             int y = m_matchedTiles[i].tileData.Y;
 
@@ -1146,10 +1150,10 @@ public class BoardManager : Manager
             //Clear Tile
             m_tilesOnBoard[x, y].OnDeSpawnTile();
 
-
+            Collapse(x, y);
         }
 
-        Collapse();
+        //Collapse();
             
 
     }
