@@ -26,6 +26,8 @@ public abstract class Tile : MonoBehaviour
         this.gameObject.SetActive(false);
         this.transform.parent = m_tileManager.transform;
         this.tileGraphics.swapAnimating = false;
+        this.tileGraphics.tileFalling = false;
+
         //this.gameObject.name = "Cleared Tile";
     }
 
@@ -91,7 +93,7 @@ public abstract class Tile : MonoBehaviour
         {
             if(tileGraphics.tileFalling)
             {
-                StopAllCoroutines();
+                //StopAllCoroutines();
             }
 
             //Utils.DebugUtils.Log(this.gameObject.name + " Destination: " + dest);
@@ -114,27 +116,37 @@ public abstract class Tile : MonoBehaviour
 
         if (tileGraphics.swapAnimating)
         {
-            yield return new WaitForSeconds(animateTime);
+            //yield return new WaitForSeconds(animateTime);
         }
 
         Vector2 startPos = this.transform.position;
+        startPos = new Vector2(Mathf.RoundToInt(startPos.x), Mathf.RoundToInt(startPos.y));
+
+        if (!tileGraphics.tileFalling)
+        {
+            //tileGraphics.swapAnimating = true;
+        }
+
         tileGraphics.swapAnimating = true;
+
         bool reachedDestination = false;
         float timeElapsed = 0;
-
-       
+          
 
         while(!reachedDestination)
         {
+
            
+
             if ((destination - (Vector2)transform.position).sqrMagnitude <= 0.0001f)
             {
                 reachedDestination = true;
                 tileGraphics.swapAnimating = false;
                 tileGraphics.tileFalling = false;
-                transform.position = new Vector2((int)destination.x , (int)destination.y);
+                transform.position = new Vector2(destination.x ,destination.y);
+                transform.position = new Vector2(Mathf.RoundToInt(transform.position.x), Mathf.RoundToInt(transform.position.y));
                 
-                
+                                
             }
 
             timeElapsed += Time.deltaTime;
@@ -142,6 +154,8 @@ public abstract class Tile : MonoBehaviour
             float t = timeElapsed / animateTime;
 
             t = Mathf.Clamp01(animationCurve.Evaluate(t));
+
+           
 
             transform.position = Vector2.Lerp(startPos, destination, t);
 

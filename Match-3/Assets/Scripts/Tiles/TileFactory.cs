@@ -34,12 +34,13 @@ public class TileFactory : MonoBehaviour
     {
         for(int i = 0; i < m_tilePool.Count; i++)
         {
-            if(!m_tilePool[i].gameObject.activeInHierarchy)
+            if(!m_tilePool[i].gameObject.activeSelf)
             {                         
                 return m_tilePool[i];
             }
         }
 
+        
         Tile tile = Instantiate(m_tilePrefabs[Random.Range(0, m_tilePrefabs.Length)]) as Tile;
         tile.gameObject.SetActive(false);
         tile.transform.parent = this.transform;

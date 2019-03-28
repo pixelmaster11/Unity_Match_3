@@ -13,6 +13,7 @@ public class BoardManager : Manager
     private int[,] m_logicalBoard;
     private Tile[,] m_tilesOnBoard;
     List<Tile> m_matchedTiles;
+    
 
 
     List<Vector2> possibleMoves = new List<Vector2>();
@@ -49,6 +50,7 @@ public class BoardManager : Manager
         m_logicalBoard = new int[width, height];
         m_tilesOnBoard = new Tile[width, height];    
         m_matchedTiles = new List<Tile>();
+      
 
         Random.InitState((int)System.DateTime.Now.Ticks);
 
@@ -90,7 +92,7 @@ public class BoardManager : Manager
                 m_logicalBoard[i, j] = tileCode;
 
                //Get the appropriate tile based on tile code
-               Tile tile_to_place = m_tileManager.GetTileFromFactoryByCode(tileCode);
+               Tile tile_to_place = m_tileManager.GetTileFromFactory(tileCode);
 
                 //Activate so we can animate tile
                 tile_to_place.gameObject.SetActive(true);
@@ -133,7 +135,7 @@ public class BoardManager : Manager
 
         //We fill the board from bottom-left so we only need to check 2-left & 2-down neighbours for matches
         //Check for 2-left neighbours of the current tile at x,y
-        for (int i = x; i >= (x-2); i--)
+        for (int i = x - 1; i >= (x-2); i--)
         {
             //If within board boundary
             if(CheckBounds(i , y))
@@ -159,7 +161,7 @@ public class BoardManager : Manager
         }
 
         //Check for 2-down neighbours of the current tile at x,y
-        for (int i = y; i >= (y - 2); i--)
+        for (int i = y - 1; i >= (y - 2); i--)
         {
             if(CheckBounds(x, i))
             {
@@ -688,7 +690,7 @@ public class BoardManager : Manager
 
         //If tilecode = 0
         else
-        {
+        {          
             tile_to_place.transform.position = new Vector2(x, y);
         }
 
@@ -837,7 +839,7 @@ public class BoardManager : Manager
 
         if(m_matchedTiles != null)
         {
-            ShowFoundMatches(ref m_matchedTiles);
+            //ShowFoundMatches(ref m_matchedTiles);
         }
        
 
@@ -1154,7 +1156,8 @@ public class BoardManager : Manager
         }
 
         //Collapse();
-            
+
+       // print("End Clear Tiles");
 
     }
 
@@ -1232,6 +1235,9 @@ public class BoardManager : Manager
 
     public void Collapse()
     {
+
+        m_matchedTiles = m_matchedTiles.OrderBy(x => x.tileData.Y).ToList();
+
         for (int i = 0; i < m_matchedTiles.Count; i++)
         {
 
@@ -1247,16 +1253,19 @@ public class BoardManager : Manager
                
                 SwapTilesOnBoard(new Vector2(m_matchedTiles[i].tileData.X, y + 1), new Vector2(m_matchedTiles[i].tileData.X, y));
 
+
+                // yield return new WaitForEndOfFrame();
+
                 
-               // yield return new WaitForEndOfFrame();
             }
 
-          
+
+           
         }
 
         
    
-        print("End");
+        //print("End");
     }
 
 
@@ -1267,17 +1276,60 @@ public class BoardManager : Manager
          //We need to move all pieces above all of the cleared tiles down by 1 row
         for (int y = Y; y < height - 1; y++)
         {
-           m_tilesOnBoard[X, y + 1].tileGraphics.tileFalling = true;
+            //print("(X , Y + 1) :" + " ( " + X + " , " + (y+1) + " )");
+
+            m_tilesOnBoard[X, y + 1].tileGraphics.tileFalling = true;
 
            float fallSpeed = m_tilesOnBoard[X, y + 1].tileGraphics.tileFallSpeed;
 
+         
            m_tileManager.AnimateTile(m_tilesOnBoard[X, y + 1], new Vector2(X, y), fallSpeed);
 
            SwapTilesOnBoard(new Vector2(X, y + 1), new Vector2(X, y));
                
         }
     
-        print("End");
+        //print("End");
+
+    }
+
+
+    public void FillNewTiles()
+    {
+       
+
+        while(m_matchedTiles.Count > 0)
+        {
+            // 1 - 8 tile codes
+            Tile newTile = m_tileManager.GetTileFromFactory(Random.Range(1,9));
+
+            
+
+            int x = newTile.tileData.X;
+            int y = newTile.tileData.Y;
+
+            //print("Name " + newTile.gameObject.name + " Pos: " + new Vector2(x, y));
+
+
+            newTile.transform.position = new Vector2(Mathf.RoundToInt(x), Mathf.RoundToInt(height + 1));
+
+            
+
+            newTile.gameObject.SetActive(true);
+
+            newTile.tileGraphics.tileFalling = true;
+
+            m_tileManager.AnimateTile(newTile, new Vector2(x, y), newTile.tileGraphics.tileFallSpeed);
+
+            PlaceTilesOnBoard(newTile, newTile.tileData.TILE_CODE, x, y);
+
+            m_matchedTiles.RemoveAt(0);
+
+            
+        }
+
+
+     
     }
 
 

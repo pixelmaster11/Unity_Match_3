@@ -49,7 +49,7 @@ public class TileManager : Manager
     /// </summary>
     /// <param name="tileCode">Tile of tilecode to return</param>
     /// <returns>Return a tile from the tile pool with corresponding tileCode</returns>
-    public Tile GetTileFromFactoryByCode(int tileCode)
+    public Tile GetTileFromFactory(int tileCode)
     {
         Tile tile = m_tileFactory.GetTile(tileCode);
         tile.OnSpawnTile(this);
@@ -153,6 +153,7 @@ public class TileManager : Manager
         AnimateTile(m_clickedTile, targetIndex, m_clickedTile.tileGraphics.tileSwapSpeed);
         AnimateTile(m_targetTile, startIndex, m_targetTile.tileGraphics.tileSwapSpeed);
 
+        //Wait for swap animation to finish
         yield return new WaitForSeconds(m_targetTile.tileGraphics.tileSwapSpeed);
       
 
@@ -175,24 +176,30 @@ public class TileManager : Manager
             AnimateTile(m_targetTile, targetIndex, m_targetTile.tileGraphics.tileSwapSpeed);
 
 
-
+            //Wait for swap animation to finish
             yield return new WaitForSeconds(m_clickedTile.tileGraphics.tileSwapSpeed);
 
             //Swap back if no match
             m_boardManager.SwapTilesOnBoard(targetIndex, startIndex);
 
 
-            //m_boardManager.SwapTilesOnBoard(startIndex, targetIndex);
+           
 
 
         }
 
         else
         {
-            //yield return new WaitForSeconds(m_targetTile.tileGraphics.tileSwapSpeed);
-            //yield return null;
+       
             m_boardManager.ClearTiles();
-            // m_boardManager.CheckAllBoardForMatch();
+
+            //Wait for collapse animation to finish
+            yield return new WaitForSeconds(m_targetTile.tileGraphics.tileFallSpeed);
+
+            //print("Begin Fill new tiles");
+
+            m_boardManager.FillNewTiles();
+            
         }
 
         //Release the tiles
