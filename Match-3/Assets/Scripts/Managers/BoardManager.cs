@@ -17,6 +17,8 @@ public class BoardManager : Manager
 
 
     List<Vector2> possibleMoves = new List<Vector2>();
+    List<Tile> highlightedMoves = new List<Tile>();
+
 
     public int width;
     public int height;
@@ -44,7 +46,7 @@ public class BoardManager : Manager
     /// <summary>
     /// Initialize the game board with chosen fill method
     /// </summary>
-    public void InitializeBoard()
+    public IEnumerator InitializeBoard()
     {
         //Init the board arrays
         m_logicalBoard = new int[width, height];
@@ -115,9 +117,11 @@ public class BoardManager : Manager
 
         }
 
+        yield return new WaitForSeconds(1);
 
-       
-            
+        m_tileManager.canAcceptInputs = true;
+
+        SuggestMoves();
 
     }
 
@@ -208,12 +212,25 @@ public class BoardManager : Manager
     }
 
 
+    public bool BoardHasMatch()
+    {
+        if(m_matchedTiles.Count < 3)
+        {
+            return false;
+        }
+
+        return true;
+    }
+
+
 
     /// <summary>
     /// This function is responsible for suggesting possible moves to the player
     /// </summary>
     public void SuggestMoves()
     {
+        possibleMoves.Clear();
+
         //For all tiles
         for (int i = 0; i < width ; i++)
         {
@@ -225,9 +242,23 @@ public class BoardManager : Manager
 
         }
 
-        GetRandomSuggestedMove(2);
+        //GetRandomSuggestedMove(2);
 
        
+    }
+
+
+
+    public bool IsThereAPossibleMatch()
+    {
+        SuggestMoves();
+
+        if(possibleMoves.Count < 3)
+        {
+            return false;
+        }
+
+        return true;
     }
 
     /// <summary>
@@ -536,6 +567,7 @@ public class BoardManager : Manager
             for (int k = randIndex; k < randIndex + 3; k++)
             {
                 HighlightMove(possibleMoves[k]);
+                highlightedMoves.Add(m_tilesOnBoard[(int)possibleMoves[k].x , (int)possibleMoves[k].y]);
             }
 
             randIndex = 0;
@@ -555,7 +587,15 @@ public class BoardManager : Manager
         m_tilesOnBoard[(int)suggestedMove.x, (int)suggestedMove.y].HighlightTile(true);
     }
 
+    public void ClearHighlightedMoves()
+    {
+        for(int i = 0; i < highlightedMoves.Count; i++)
+        {
+            highlightedMoves[i].HighlightTile(false);
+        }
 
+        highlightedMoves.Clear();
+    }
 
     //Row wise move check
     //    X       X
@@ -690,7 +730,8 @@ public class BoardManager : Manager
 
         //If tilecode = 0
         else
-        {          
+        {
+            tile_to_place.OnDeSpawnTile();
             tile_to_place.transform.position = new Vector2(x, y);
         }
 
@@ -1013,7 +1054,7 @@ public class BoardManager : Manager
 
                 if (startTileCode == nextTileCode)
                 {
-                    //TODO: Add matching tiles
+                    
                     matchCount += 1;
 
                     if (!horizontalMatches.Contains(m_tilesOnBoard[x + i, y]))
@@ -1152,10 +1193,10 @@ public class BoardManager : Manager
             //Clear Tile
             m_tilesOnBoard[x, y].OnDeSpawnTile();
 
-            Collapse(x, y);
+            //Collapse(x, y);
         }
 
-        //Collapse();
+        Collapse();
 
        // print("End Clear Tiles");
 
@@ -1236,7 +1277,7 @@ public class BoardManager : Manager
     public void Collapse()
     {
 
-        m_matchedTiles = m_matchedTiles.OrderBy(x => x.tileData.Y).ToList();
+        //m_matchedTiles = m_matchedTiles.OrderBy(x => x.tileData.Y).ToList();
 
         for (int i = 0; i < m_matchedTiles.Count; i++)
         {
@@ -1302,19 +1343,22 @@ public class BoardManager : Manager
         {
             // 1 - 8 tile codes
             Tile newTile = m_tileManager.GetTileFromFactory(Random.Range(1,9));
-
             
+            while(m_matchedTiles.Contains(newTile))
+            {
+                newTile = m_tileManager.GetTileFromFactory(Random.Range(1, 9));
+            }
 
-            int x = newTile.tileData.X;
-            int y = newTile.tileData.Y;
+           // int x = newTile.tileData.X;
+            //int y = newTile.tileData.Y;
 
-            //print("Name " + newTile.gameObject.name + " Pos: " + new Vector2(x, y));
+            int x = m_matchedTiles[0].tileData.X;
+            int y = m_matchedTiles[0].tileData.Y;
 
+           
 
             newTile.transform.position = new Vector2(Mathf.RoundToInt(x), Mathf.RoundToInt(height + 1));
-
-            
-
+          
             newTile.gameObject.SetActive(true);
 
             newTile.tileGraphics.tileFalling = true;
@@ -1323,7 +1367,11 @@ public class BoardManager : Manager
 
             PlaceTilesOnBoard(newTile, newTile.tileData.TILE_CODE, x, y);
 
+            //print("Name " + newTile.gameObject.name + " Pos: " + new Vector2(x, y));
+
             m_matchedTiles.RemoveAt(0);
+
+            //yield return new WaitForSeconds(newTile.tileGraphics.tileFallSpeed);
 
             
         }

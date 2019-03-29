@@ -59,7 +59,7 @@ public class TileFactory : MonoBehaviour
     {
         for (int i = 0; i < m_tilePool.Count; i++)
         {
-            if (!m_tilePool[i].gameObject.activeInHierarchy && tileCode == m_tilePool[i].tileData.TILE_CODE)
+            if (!m_tilePool[i].gameObject.activeSelf && tileCode == m_tilePool[i].tileData.TILE_CODE)
             {
                 return m_tilePool[i];
             }
@@ -90,6 +90,39 @@ public class TileFactory : MonoBehaviour
         return tile;
     }
 
+
+    /// <summary>
+    /// Returns a tile from tile pool with corresponding tile ID code
+    /// </summary>
+    /// <param name="tileCode">Tile ID code to fetch tile</param>
+    /// <returns></returns>
+    public Tile GetNewTile(int tileCode)
+    {
+        
+
+        Tile tile = null;
+
+        for (int i = 0; i < m_tilePrefabs.Length; i++)
+        {
+            if (m_tilePrefabs[i].tileData.TILE_CODE == tileCode)
+            {
+                tile = Instantiate(m_tilePrefabs[i]) as Tile;
+                tile.gameObject.SetActive(false);
+                tile.transform.parent = this.transform;
+               
+            }
+
+
+
+        }
+
+        if (tile == null)
+        {
+            Utils.DebugUtils.Log("Tile code: " + tileCode + " is invalid");
+        }
+
+        return tile;
+    }
 
 
 }

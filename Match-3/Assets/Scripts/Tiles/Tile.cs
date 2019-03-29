@@ -11,22 +11,29 @@ public abstract class Tile : MonoBehaviour
 
     public AnimationCurve animationCurve;
 
+    
+
     //Animate on spawn
     public virtual void OnSpawnTile(TileManager tm)
     {
         m_tileManager = tm;
-       
+        tileData.AcceptClick = true;
 
     }
 
     //Animate on despawn
     public virtual void OnDeSpawnTile()
     {
+        StopAllCoroutines();
         HighlightTile(false);
-        this.gameObject.SetActive(false);
         this.transform.parent = m_tileManager.transform;
-        this.tileGraphics.swapAnimating = false;
-        this.tileGraphics.tileFalling = false;
+
+        tileData.AcceptClick = false;
+        tileGraphics.swapAnimating = false;
+        tileGraphics.tileFalling = false;
+    
+        this.gameObject.SetActive(false);
+       
 
         //this.gameObject.name = "Cleared Tile";
     }
@@ -89,11 +96,11 @@ public abstract class Tile : MonoBehaviour
     /// <param name="animTime">Time take for this tile to move from current position to destination position</param>
     public void Animate(Vector2 dest, float animTime)
     {
-        if(gameObject.activeInHierarchy)
+        if(gameObject.activeSelf)
         {
             if(tileGraphics.tileFalling)
             {
-                //StopAllCoroutines();
+                StopAllCoroutines();
             }
 
             //Utils.DebugUtils.Log(this.gameObject.name + " Destination: " + dest);
@@ -102,7 +109,7 @@ public abstract class Tile : MonoBehaviour
        
     }
 
-
+  
     /// <summary>
     /// Couroutine to interpolate movement
     /// </summary>
@@ -113,58 +120,44 @@ public abstract class Tile : MonoBehaviour
     {
         //If this tile is already or still moving to destination but this is not the clearing animation
 
-
-        if (tileGraphics.swapAnimating)
-        {
-            //yield return new WaitForSeconds(animateTime);
-        }
+      
 
         Vector2 startPos = this.transform.position;
         startPos = new Vector2(Mathf.RoundToInt(startPos.x), Mathf.RoundToInt(startPos.y));
-
-        if (!tileGraphics.tileFalling)
-        {
-            //tileGraphics.swapAnimating = true;
-        }
-
-        tileGraphics.swapAnimating = true;
-
         bool reachedDestination = false;
+        tileGraphics.swapAnimating = true;
+       
         float timeElapsed = 0;
-          
 
-        while(!reachedDestination)
+        while (!reachedDestination)
         {
+            float distance = Vector3.Distance(destination, transform.position);
+            //float distance = (destination - (Vector2)transform.position).sqrMagnitude;
 
-           
 
-            if ((destination - (Vector2)transform.position).sqrMagnitude <= 0.0001f)
+            if (distance <= 0.01f)
             {
                 reachedDestination = true;
                 tileGraphics.swapAnimating = false;
                 tileGraphics.tileFalling = false;
-                transform.position = new Vector2(destination.x ,destination.y);
-                transform.position = new Vector2(Mathf.RoundToInt(transform.position.x), Mathf.RoundToInt(transform.position.y));
-                
-                                
+                transform.position = destination;
             }
 
             timeElapsed += Time.deltaTime;
-             
+
             float t = timeElapsed / animateTime;
 
             t = Mathf.Clamp01(animationCurve.Evaluate(t));
 
-           
-
             transform.position = Vector2.Lerp(startPos, destination, t);
-
-            
 
             yield return null;
         }
 
-       
+
+        transform.position = destination;
+        reachedDestination = true;
+
 
     }
 
@@ -179,7 +172,7 @@ public class TileData
     public int TILE_CODE;
     public int X;
     public int Y;
-    
+    public bool AcceptClick;
     
 }
 
