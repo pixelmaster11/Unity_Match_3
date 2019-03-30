@@ -13,7 +13,8 @@ public class BoardManager : Manager
     private int[,] m_logicalBoard;
     private Tile[,] m_tilesOnBoard;
     List<Tile> m_matchedTiles;
-    
+
+    public bool Shuffling = true;
 
 
     List<Vector2> possibleMoves = new List<Vector2>();
@@ -56,7 +57,7 @@ public class BoardManager : Manager
 
         Random.InitState((int)System.DateTime.Now.Ticks);
 
-        m_boardFillStrategy = new RandomBoardFillStrategy();
+        m_boardFillStrategy = new TextBasedBoardFillStrategy();
 
 
 
@@ -70,17 +71,38 @@ public class BoardManager : Manager
                 //Get the logical filled board data based on chosen fill method
                 int tileCode = m_boardFillStrategy.FillBoard(width, height, i, j, 0, false);
 
+                //Assign the tilecode into the logical board
                 m_logicalBoard[i, j] = tileCode;
 
+                //Get the appropriate tile based on tile code
+                Tile tile_to_place = m_tileManager.GetTileFromFactory(tileCode);
+
+                //Place the tile on board
+                PlaceTilesOnBoard(tile_to_place, tileCode, i, j);
+
                 int x = 1;
+
 
                 //while there are matches on fill
                 //Get new tile
                 while (CheckMatchOnFill(i, j))
                 {
 
+                    //If there is a match / remove previous place tile and get a new tile
+                    m_tilesOnBoard[i, j].OnDeSpawnTile();
+
+                    //Get new tile 
                     tileCode = m_boardFillStrategy.FillBoard(width, height, i, j, 0, true);
+
+                    //Asign
                     m_logicalBoard[i, j] = tileCode;
+
+                    //Get the appropriate tile based on new tile code
+                    tile_to_place = m_tileManager.GetTileFromFactory(tileCode);
+
+                    //Place the new tile on board
+                    PlaceTilesOnBoard(tile_to_place, tileCode, i, j);
+
                     x++;
 
                     if (x >= 100)
@@ -94,7 +116,7 @@ public class BoardManager : Manager
                 m_logicalBoard[i, j] = tileCode;
 
                //Get the appropriate tile based on tile code
-               Tile tile_to_place = m_tileManager.GetTileFromFactory(tileCode);
+                //tile_to_place = m_tileManager.GetTileFromFactory(tileCode);
 
                 //Activate so we can animate tile
                 tile_to_place.gameObject.SetActive(true);
@@ -108,7 +130,7 @@ public class BoardManager : Manager
                //tile_to_place.transform.position = new Vector2(i, j);
 
                 //Place the tile on board
-                PlaceTilesOnBoard(tile_to_place, tileCode, i, j);
+                //PlaceTilesOnBoard(tile_to_place, tileCode, i, j);
 
 
 
@@ -144,6 +166,13 @@ public class BoardManager : Manager
             //If within board boundary
             if(CheckBounds(i , y))
             {
+                //Break if tile is a block tile
+                if(m_tilesOnBoard[x , y].tileData.tileType == Enums.TileType.Block || 
+                    m_tilesOnBoard[i , y].tileData.tileType == Enums.TileType.Block)
+                {
+                    break;
+                }
+
                 //Check for match
                 if (m_logicalBoard[x, y] == m_logicalBoard[i, y])
                 {
@@ -169,6 +198,14 @@ public class BoardManager : Manager
         {
             if(CheckBounds(x, i))
             {
+
+                //Break if tile is a block tile
+                if (m_tilesOnBoard[x, y].tileData.tileType == Enums.TileType.Block ||
+                    m_tilesOnBoard[x, i].tileData.tileType == Enums.TileType.Block)
+                {
+                    break;
+                }
+
                 if (m_logicalBoard[x, y] == m_logicalBoard[x, i])
                 {
                     matchFoundY = true;
@@ -236,8 +273,13 @@ public class BoardManager : Manager
         {
             for (int j = 0; j < height ; j++)
             {
-                //Get a 3x3 matrix of neighbours 
-                GetNeighbours(i , j);            
+                //Get neighbours and possible moves only if tile is not a block type
+                if(m_tilesOnBoard[i , j].tileData.tileType != Enums.TileType.Block)
+                {
+                    //Get a 3x3 matrix of neighbours 
+                    GetNeighbours(i, j);
+                }
+                          
             }
 
         }
@@ -291,6 +333,9 @@ public class BoardManager : Manager
         if (CheckBounds(x - 1, y) && m_logicalBoard[x, y] == m_logicalBoard[x - 1, y])
         {
 
+           
+           
+
             possibleMove = GetPossibleMoveX(x, y, 1);
 
             if (possibleMove != Vector2.zero)
@@ -299,6 +344,7 @@ public class BoardManager : Manager
                 //HighlightMove(new Vector2(x - 1, y));
                 // HighlightMove(possibleMove);
 
+               
                 possibleMoves.Add(new Vector2(x, y));
                 possibleMoves.Add(new Vector2(x - 1, y));
                 possibleMoves.Add(possibleMove);
@@ -446,7 +492,9 @@ public class BoardManager : Manager
         }
 
             //Left Up
-            if (CheckBounds(x - 1, y + 1) && m_logicalBoard[x, y] == m_logicalBoard[x - 1, y + 1])
+            if (CheckBounds(x - 1, y + 1) && m_logicalBoard[x, y] == m_logicalBoard[x - 1, y + 1] &&
+                CheckBounds(x, y + 1) && m_tilesOnBoard[x, y + 1].tileData.tileType != Enums.TileType.Block &&
+                CheckBounds(x - 1, y) && m_tilesOnBoard[x - 1, y].tileData.tileType != Enums.TileType.Block)
             {
                 possibleMove = GetPossibleMoveDiag(x, y, 1);
 
@@ -455,7 +503,7 @@ public class BoardManager : Manager
                     //HighlightMove(new Vector2(x, y));
                     //HighlightMove(new Vector2(x - 1, y + 1));
                     //HighlightMove(possibleMove);
-
+                     print("LEft up diag");
                     possibleMoves.Add(new Vector2(x, y));
                     possibleMoves.Add(new Vector2(x - 1, y + 1));
                     possibleMoves.Add(possibleMove);
@@ -467,7 +515,9 @@ public class BoardManager : Manager
 
 
             //Left Down
-            if (CheckBounds(x - 1, y - 1) && m_logicalBoard[x, y] == m_logicalBoard[x - 1, y - 1])
+            if (CheckBounds(x - 1, y - 1) && m_logicalBoard[x, y] == m_logicalBoard[x - 1, y - 1] &&
+                CheckBounds(x - 1, y) && m_tilesOnBoard[x - 1, y].tileData.tileType != Enums.TileType.Block &&
+                CheckBounds(x , y - 1) && m_tilesOnBoard[x, y - 1].tileData.tileType != Enums.TileType.Block)
             {
                 possibleMove = GetPossibleMoveDiag(x, y, -1);
 
@@ -476,7 +526,7 @@ public class BoardManager : Manager
                     //HighlightMove(new Vector2(x, y));
                    // HighlightMove(new Vector2(x - 1, y - 1));
                    // HighlightMove(possibleMove);
-                   
+                    print("LEft down diag");
                     possibleMoves.Add(new Vector2(x, y));
                     possibleMoves.Add(new Vector2(x - 1, y - 1));
                     possibleMoves.Add(possibleMove);
@@ -486,7 +536,9 @@ public class BoardManager : Manager
 
 
             //RightDown 
-            if (CheckBounds(x + 1, y - 1) && m_logicalBoard[x, y] == m_logicalBoard[x + 1, y - 1])
+            if (CheckBounds(x + 1, y - 1) && m_logicalBoard[x, y] == m_logicalBoard[x + 1, y - 1] &&
+                CheckBounds(x, y - 1) && m_tilesOnBoard[x, y - 1].tileData.tileType != Enums.TileType.Block &&
+                CheckBounds(x + 1, y) && m_tilesOnBoard[x + 1, y].tileData.tileType != Enums.TileType.Block)
             {
                 possibleMove = GetPossibleMoveDiag(x, y, 1);
 
@@ -505,9 +557,13 @@ public class BoardManager : Manager
 
 
             //Right Up
-            if (CheckBounds(x + 1, y + 1) && m_logicalBoard[x, y] == m_logicalBoard[x + 1, y + 1])
+            if (CheckBounds(x + 1, y + 1) && m_logicalBoard[x, y] == m_logicalBoard[x + 1, y + 1] &&
+                CheckBounds(x + 1, y) && m_tilesOnBoard[x + 1, y].tileData.tileType != Enums.TileType.Block &&
+                CheckBounds(x, y + 1) && m_tilesOnBoard[x, y + 1].tileData.tileType != Enums.TileType.Block)
             {
+                
                 possibleMove = GetPossibleMoveDiag(x, y, -1);
+                
 
                 if (possibleMove != Vector2.zero)
                 {
@@ -532,6 +588,8 @@ public class BoardManager : Manager
     /// <param name="numberOfMoves">Number of moves to suggest to user</param>
     public void GetRandomSuggestedMove(int numberOfMoves)
     {
+        //Remove any duplicate entries
+        //possibleMoves = possibleMoves.Distinct().ToList();
 
         if (possibleMoves.Count < 3)
         {
@@ -598,21 +656,24 @@ public class BoardManager : Manager
     }
 
     //Row wise move check
-    //    X       X
-    //     0 X X 0
-    //    X       X
+    //     X     X
+    //     0 X X 0 
+    //     X     X
     //
     public Vector2 GetPossibleMoveX(int x, int y, int direction)
     {
-        //Right Up diagonal
-        if (CheckBounds(x + 1 * direction, y + 1 ) && m_logicalBoard[x, y] == m_logicalBoard[x + 1 * direction, y + 1])
+        //Right/Left Up diagonal
+        //And tile below it is not a block tile
+        if (CheckBounds(x + 1 * direction, y + 1 ) && m_logicalBoard[x, y] == m_logicalBoard[x + 1 * direction, y + 1] &&
+            CheckBounds(x + 1 * direction, y) && m_tilesOnBoard[x + 1 * direction, y].tileData.tileType != Enums.TileType.Block)
         {
            
             return new Vector2(x + 1 * direction, y + 1);
         }
 
-        //Right down diagonal
-        else if (CheckBounds(x + 1 * direction, y - 1 ) && m_logicalBoard[x, y] == m_logicalBoard[x + 1 * direction , y - 1 ])
+        //Right/Left down diagonal
+        else if (CheckBounds(x + 1 * direction, y - 1 ) && m_logicalBoard[x, y] == m_logicalBoard[x + 1 * direction , y - 1 ] &&
+            CheckBounds(x + 1 * direction, y) && m_tilesOnBoard[x + 1 * direction, y].tileData.tileType != Enums.TileType.Block)
         {
             
             return new Vector2(x + 1 * direction, y - 1);
@@ -634,14 +695,16 @@ public class BoardManager : Manager
     // 
     public Vector2 GetPossibleMoveY(int x, int y, int direction)
     {
-        //Right Up diagonal
-        if (CheckBounds(x - 1 , y + 1 * direction) && m_logicalBoard[x, y] == m_logicalBoard[x - 1 , y + 1 * direction])
+        //Right/Left Up diagonal
+        if (CheckBounds(x - 1 , y + 1 * direction) && m_logicalBoard[x, y] == m_logicalBoard[x - 1 , y + 1 * direction] &&
+            CheckBounds(x, y + 1 * direction) && m_tilesOnBoard[x, y + 1 * direction].tileData.tileType != Enums.TileType.Block)
         {
             return new Vector2(x - 1, y + 1 * direction);
         }
 
-        //Rigght down diagonal
-        else if (CheckBounds(x + 1 , y + 1 * direction) && m_logicalBoard[x, y] == m_logicalBoard[x + 1, y + 1 * direction])
+        //Right/Left down diagonal
+        else if (CheckBounds(x + 1 , y + 1 * direction) && m_logicalBoard[x, y] == m_logicalBoard[x + 1, y + 1 * direction] &&
+            CheckBounds(x, y + 1 * direction) && m_tilesOnBoard[x, y + 1 * direction].tileData.tileType != Enums.TileType.Block)
         {
             return new Vector2(x + 1, y + 1 * direction);
         }
@@ -660,7 +723,8 @@ public class BoardManager : Manager
     public Vector2 GetPossibleMoveYExtra(int x, int y, int direction)
     {
         //Right Up/down 2 spaces
-        if (CheckBounds(x , y + 2 * direction) && m_logicalBoard[x, y] == m_logicalBoard[x , y + 2 * direction])
+        if (CheckBounds(x , y + 2 * direction) && m_logicalBoard[x, y] == m_logicalBoard[x , y + 2 * direction] &&
+            CheckBounds(x, y + 1 * direction) && m_tilesOnBoard[x, y + 1 * direction].tileData.tileType != Enums.TileType.Block)
         {
             return new Vector2(x, y + 2 * direction);
         }
@@ -685,7 +749,7 @@ public class BoardManager : Manager
         }
 
 
-        else if (CheckBounds(x + 1 , y + 1 * direction) && m_logicalBoard[x, y] == m_logicalBoard[x + 1, y + 1 * direction])
+        else if (CheckBounds(x + 1 , y + 1 * direction) && m_logicalBoard[x, y] == m_logicalBoard[x + 1, y + 1 * direction]) 
         {
             return new Vector2(x + 1, y + 1 * direction);
         }
@@ -935,6 +999,15 @@ public class BoardManager : Manager
 
                 //Get the next tile code
                 int nextTileCode = m_logicalBoard[x, y + i];
+                
+                //Get next TileType
+                Enums.TileType nextTileType = m_tilesOnBoard[x , y + i].tileData.tileType;
+
+                //If its a block type do not match
+                if(nextTileType == Enums.TileType.Block)
+                {
+                    break;
+                }
 
                 //If the tile above has same tile code // then a match is found
                 if (startTileCode == nextTileCode)
@@ -982,6 +1055,14 @@ public class BoardManager : Manager
 
             int nextTileCode = m_logicalBoard[x, y - i];
 
+            //Get next TileType
+            Enums.TileType nextTileType = m_tilesOnBoard[x, y - i].tileData.tileType;
+
+            //If its a block type do not match
+            if (nextTileType == Enums.TileType.Block)
+            {
+                break;
+            }
 
             if (startTileCode == nextTileCode)
             {
@@ -1052,6 +1133,15 @@ public class BoardManager : Manager
 
                 int nextTileCode = m_logicalBoard[x + i, y];
 
+                //Get next TileType
+                Enums.TileType nextTileType = m_tilesOnBoard[x + i, y].tileData.tileType;
+
+                //If its a block type do not match
+                if (nextTileType == Enums.TileType.Block)
+                {
+                    break;
+                }
+
                 if (startTileCode == nextTileCode)
                 {
                     
@@ -1089,6 +1179,15 @@ public class BoardManager : Manager
             }
 
             int nextTileCode = m_logicalBoard[x - i, y];
+
+            //Get next TileType
+            Enums.TileType nextTileType = m_tilesOnBoard[x - i, y].tileData.tileType;
+
+            //If its a block type do not match
+            if (nextTileType == Enums.TileType.Block)
+            {
+                break;
+            }
 
             if (startTileCode == nextTileCode)
             {
@@ -1148,7 +1247,7 @@ public class BoardManager : Manager
     /// <param name="matchedTiles"></param>
     public void ShowFoundMatches(ref List<Tile> matchedTiles)
     {
-        //ADDED
+        
         if (matchedTiles.Count >= 3)
         {
 
@@ -1158,13 +1257,7 @@ public class BoardManager : Manager
             }
         }
       
-        
-       
-
-
-        //StartCoroutine(ClearMatchedTiles(matchedTiles));
-        //ClearMatchedTiles(matchedTiles);
-      
+                
     }
 
 
@@ -1204,7 +1297,7 @@ public class BoardManager : Manager
 
 
     //Clears all tiles from col and row
-    public void ClearTiles(int col, int row, bool clearRow = false, bool clearCol = false)
+  /*  public void ClearTiles(int col, int row, bool clearRow = false, bool clearCol = false)
     {
         if(clearRow == false & clearCol == false)
         {
@@ -1269,7 +1362,7 @@ public class BoardManager : Manager
         Collapse(x, y);
     }
 
-
+*/
    
 
 
@@ -1286,16 +1379,41 @@ public class BoardManager : Manager
             for (int y = m_matchedTiles[i].tileData.Y; y < height - 1; y++)
             {
 
+                int prevY = y;
+
+                //While there is a block tile..keep moving up
+                while (m_tilesOnBoard[m_matchedTiles[i].tileData.X, y + 1].tileData.tileType == Enums.TileType.Block)
+                {
+                    if ((y + 1) < height - 1)
+                    {
+                        y++;
+                    }
+
+                    else
+                    {
+                        break;
+                    }
+                }
+
+                //Check If there is a block tile at the very top of the board
+                if(y == height - 2 && m_tilesOnBoard[m_matchedTiles[i].tileData.X, y + 1].tileData.tileType == Enums.TileType.Block)
+                {
+                    continue;
+                }
+               
+
+
                 m_tilesOnBoard[m_matchedTiles[i].tileData.X, y + 1].tileGraphics.tileFalling = true;
 
                 float fallSpeed = m_tilesOnBoard[m_matchedTiles[i].tileData.X, y + 1].tileGraphics.tileFallSpeed;
 
-                m_tileManager.AnimateTile(m_tilesOnBoard[m_matchedTiles[i].tileData.X, y + 1], new Vector2(m_matchedTiles[i].tileData.X, y), fallSpeed);
+                m_tileManager.AnimateTile(m_tilesOnBoard[m_matchedTiles[i].tileData.X, y + 1], new Vector2(m_matchedTiles[i].tileData.X, prevY), fallSpeed);
                
-                SwapTilesOnBoard(new Vector2(m_matchedTiles[i].tileData.X, y + 1), new Vector2(m_matchedTiles[i].tileData.X, y));
+                SwapTilesOnBoard(new Vector2(m_matchedTiles[i].tileData.X, y + 1), new Vector2(m_matchedTiles[i].tileData.X, prevY));
 
 
-                // yield return new WaitForEndOfFrame();
+                prevY = y;
+                
 
                 
             }
@@ -1306,12 +1424,12 @@ public class BoardManager : Manager
 
         
    
-        //print("End");
+       
     }
 
 
     //Collapse at pos x, y
-    public void Collapse(int X, int Y)
+   /* public void Collapse(int X, int Y)
     {
         
          //We need to move all pieces above all of the cleared tiles down by 1 row
@@ -1332,7 +1450,7 @@ public class BoardManager : Manager
     
         //print("End");
 
-    }
+    }*/
 
 
     public void FillNewTiles()
@@ -1344,13 +1462,13 @@ public class BoardManager : Manager
             // 1 - 8 tile codes
             Tile newTile = m_tileManager.GetTileFromFactory(Random.Range(1,9));
             
+
             while(m_matchedTiles.Contains(newTile))
             {
                 newTile = m_tileManager.GetTileFromFactory(Random.Range(1, 9));
             }
 
-           // int x = newTile.tileData.X;
-            //int y = newTile.tileData.Y;
+         
 
             int x = m_matchedTiles[0].tileData.X;
             int y = m_matchedTiles[0].tileData.Y;

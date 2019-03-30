@@ -28,9 +28,10 @@ public class TileManager : Manager
     private void Update()
     {
 
-        if (m_timer >= 5)
+        if (m_timer >= 0.5f && canAcceptInputs)
         {
-            //m_boardManager.GetRandomSuggestedMove(1);
+            m_boardManager.ClearHighlightedMoves();
+            m_boardManager.GetRandomSuggestedMove(1);
             m_timer = 0;
         }
 
@@ -141,6 +142,14 @@ public class TileManager : Manager
           
         }
 
+        else
+        {
+            m_targetTile = null;
+            m_clickedTile = null;
+            canAcceptInputs = true;
+        
+        }
+
       
     }
 
@@ -248,12 +257,13 @@ public class TileManager : Manager
 
                 while (!m_boardManager.IsThereAPossibleMatch())
                 {
+                    m_boardManager.Shuffling = true;
                     m_boardManager.ShuffleBoard();
                     yield return null;
                 }
 
-
-
+                
+               
             }
 
             while (m_boardManager.BoardHasMatch()); 
@@ -268,7 +278,7 @@ public class TileManager : Manager
         //Release the tiles
         m_clickedTile = null;
         m_targetTile = null;
-
+        m_boardManager.Shuffling = false;
         canAcceptInputs = true;
     }
 

@@ -9,7 +9,8 @@ public class Enums
     {
         Normal,
         Bonus,
-        Border
+        Block,
+        Bomb
     };
 
    

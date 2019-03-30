@@ -7,10 +7,11 @@ public abstract class Tile : MonoBehaviour
 {
     public TileData tileData;
     public TileGraphics tileGraphics;
-    private TileManager m_tileManager;
+    protected TileManager m_tileManager;
 
     public AnimationCurve animationCurve;
 
+  
     
 
     //Animate on spawn
@@ -52,8 +53,12 @@ public abstract class Tile : MonoBehaviour
 
     public void OnMouseDown()
     {
-        tileGraphics.tileClicked = true;
-        m_tileManager.ClickedTile(this);
+        if(tileData.AcceptClick)
+        {
+            tileGraphics.tileClicked = true;
+            m_tileManager.ClickedTile(this);
+        }
+       
     }
 
 
@@ -62,7 +67,7 @@ public abstract class Tile : MonoBehaviour
         //Tile Activated
         //HighlightTile(true);
 
-        if (!tileGraphics.tileClicked)
+        if (!tileGraphics.tileClicked && tileData.AcceptClick)
         {
             m_tileManager.DragTile(this);
         }
@@ -173,7 +178,8 @@ public class TileData
     public int X;
     public int Y;
     public bool AcceptClick;
-    
+    public Enums.TileType tileType;
+
 }
 
 [System.Serializable]

@@ -40,16 +40,17 @@ public class TextBasedBoardFillStrategy : IBoardFillStrategy
         }
 
         //Check if we have properly dimensioned data in accordance with the board dimensions
-        if (data.Length == width)
+        if (data.Length == height)
         {
-            
-            return System.Int32.Parse(data[width - 1 - j].Split(' ')[i]);
+
+            //Utils.DebugUtils.Log("Data Length:" +data.Length.ToString() + " " + j.ToString());
+            return System.Int32.Parse(data[height - 1 - j].Split(' ')[i]);
        
         }
 
         else
         {
-            Utils.DebugUtils.Log("File data width: " + data.Length + " does not match with board width: " + width);
+            Utils.DebugUtils.Log("File data height: " + data.Length + " does not match with board height: " + height);
             return 0;
         }
 
