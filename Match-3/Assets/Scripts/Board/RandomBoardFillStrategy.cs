@@ -4,7 +4,7 @@ using UnityEngine;
 
 public class RandomBoardFillStrategy : IBoardFillStrategy
 {
-    public int FillBoard (int width, int height, int i, int j, int map = 0, bool generateRandom = false)
+    public int FillBoard (int width, int height, int i, int j, int maxTileCodes, int map = 0, bool generateRandom = false)
     {
         //Random.InitState((int)System.DateTime.Now.Ticks);
 
@@ -52,9 +52,16 @@ public class RandomBoardFillStrategy : IBoardFillStrategy
             return 8;
         }
 
+
+        else if (randomNumber >= 130 && randomNumber < 132)
+        {
+            // return 9;
+            return Random.Range(1, maxTileCodes + 1);
+        }
+
         else
         {
-            return 3; //Random.Range(1, 9);
+            return Random.Range(1, maxTileCodes + 1);
         }
 
 

@@ -7,13 +7,13 @@ using System.Text;
 public class TextBasedBoardFillStrategy : IBoardFillStrategy
 {
      
-    public int FillBoard(int width, int height, int i, int j,  int map = 0, bool generateRandom = false)
+    public int FillBoard(int width, int height, int i, int j, int maxTileCodes, int map = 0, bool generateRandom = false)
     {
-        return Load(width, height, i, j, generateRandom);           
+        return Load(width, height, i, j, maxTileCodes, generateRandom);           
     }
 
 
-    private int Load(int width, int height, int i, int j, bool generateRandom)
+    private int Load(int width, int height, int i, int j, int maxTileCodes, bool generateRandom)
     {
         string path = "Assets/Resources/Level1.txt";
 
@@ -36,7 +36,7 @@ public class TextBasedBoardFillStrategy : IBoardFillStrategy
         {
             Random.InitState((int)System.DateTime.Now.Ticks);
 
-            return Random.Range(1, 9);
+            return Random.Range(1, maxTileCodes + 1);
         }
 
         //Check if we have properly dimensioned data in accordance with the board dimensions

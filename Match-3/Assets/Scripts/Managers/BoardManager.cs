@@ -13,6 +13,7 @@ public class BoardManager : Manager
     private int[,] m_logicalBoard;
     private Tile[,] m_tilesOnBoard;
     List<Tile> m_matchedTiles;
+    List<Tile> m_bombPosition = new List<Tile>();
 
     public bool Shuffling = true;
 
@@ -57,7 +58,7 @@ public class BoardManager : Manager
 
         Random.InitState((int)System.DateTime.Now.Ticks);
 
-        m_boardFillStrategy = new TextBasedBoardFillStrategy();
+        m_boardFillStrategy = new RandomBoardFillStrategy();
 
 
 
@@ -69,16 +70,19 @@ public class BoardManager : Manager
            {
                
                 //Get the logical filled board data based on chosen fill method
-                int tileCode = m_boardFillStrategy.FillBoard(width, height, i, j, 0, false);
+                int tileCode = m_boardFillStrategy.FillBoard(width, height, i, j, Constants.MAX_TILE_CODES, 0, false);
 
                 //Assign the tilecode into the logical board
-                m_logicalBoard[i, j] = tileCode;
+                //m_logicalBoard[i, j] = tileCode;
 
                 //Get the appropriate tile based on tile code
                 Tile tile_to_place = m_tileManager.GetTileFromFactory(tileCode);
-
+            
                 //Place the tile on board
-                PlaceTilesOnBoard(tile_to_place, tileCode, i, j);
+                PlaceTilesOnBoard(tile_to_place, tile_to_place.tileData.TILE_CODE, i, j);
+
+                //Place the new tile on board
+                //PlaceTilesOnBoard(tile_to_place, tileCode, i, j);
 
                 int x = 1;
 
@@ -92,16 +96,24 @@ public class BoardManager : Manager
                     m_tilesOnBoard[i, j].OnDeSpawnTile();
 
                     //Get new tile 
-                    tileCode = m_boardFillStrategy.FillBoard(width, height, i, j, 0, true);
+                    tileCode = m_boardFillStrategy.FillBoard(width, height, i, j, Constants.MAX_TILE_CODES, 0, true);
 
                     //Asign
-                    m_logicalBoard[i, j] = tileCode;
+                    // m_logicalBoard[i, j] = tileCode;
+
+                   
 
                     //Get the appropriate tile based on new tile code
                     tile_to_place = m_tileManager.GetTileFromFactory(tileCode);
 
+                
                     //Place the new tile on board
-                    PlaceTilesOnBoard(tile_to_place, tileCode, i, j);
+                    PlaceTilesOnBoard(tile_to_place, tile_to_place.tileData.TILE_CODE, i, j);
+
+
+                    //Place the new tile on board
+                    //PlaceTilesOnBoard(tile_to_place, tileCode, i, j);
+
 
                     x++;
 
@@ -113,7 +125,7 @@ public class BoardManager : Manager
                 }
 
                 //Get tile code
-                m_logicalBoard[i, j] = tileCode;
+                //m_logicalBoard[i, j] = tileCode;
 
                //Get the appropriate tile based on tile code
                 //tile_to_place = m_tileManager.GetTileFromFactory(tileCode);
@@ -124,10 +136,11 @@ public class BoardManager : Manager
                 //Animate tile on start
                 m_tileManager.AnimateTile(tile_to_place, new Vector2(i, j), 1f);
 
-                
+              
 
-               //initialize the tile position
-               //tile_to_place.transform.position = new Vector2(i, j);
+
+                //initialize the tile position
+                //tile_to_place.transform.position = new Vector2(i, j);
 
                 //Place the tile on board
                 //PlaceTilesOnBoard(tile_to_place, tileCode, i, j);
@@ -503,7 +516,7 @@ public class BoardManager : Manager
                     //HighlightMove(new Vector2(x, y));
                     //HighlightMove(new Vector2(x - 1, y + 1));
                     //HighlightMove(possibleMove);
-                     print("LEft up diag");
+                    
                     possibleMoves.Add(new Vector2(x, y));
                     possibleMoves.Add(new Vector2(x - 1, y + 1));
                     possibleMoves.Add(possibleMove);
@@ -526,7 +539,7 @@ public class BoardManager : Manager
                     //HighlightMove(new Vector2(x, y));
                    // HighlightMove(new Vector2(x - 1, y - 1));
                    // HighlightMove(possibleMove);
-                    print("LEft down diag");
+                    
                     possibleMoves.Add(new Vector2(x, y));
                     possibleMoves.Add(new Vector2(x - 1, y - 1));
                     possibleMoves.Add(possibleMove);
@@ -1022,9 +1035,12 @@ public class BoardManager : Manager
                     }
 
                     //EXTEND: We can add special bonuses for more matches
-                    if (matchCount >= 3)
+                    //If we have match of 4 then place a bomb
+                    if (matchCount > 3)
                     {
                         //Utils.DebugUtils.Log("Matched Vertically " + matchCount);
+                         if(!m_bombPosition.Contains(m_tilesOnBoard[x,y]))
+                            m_bombPosition.Add(m_tilesOnBoard[x, y]);
 
                     }
                 }
@@ -1074,9 +1090,12 @@ public class BoardManager : Manager
                     verticalMatches.Add(m_tilesOnBoard[x, y - i]);
                 }
 
-                if (matchCount >= 3)
+                //If we have a match of 4 vertically then place a bomb
+                if (matchCount > 3)
                 {
                     //Utils.DebugUtils.Log("Matched vertically " + matchCount);
+                    if (!m_bombPosition.Contains(m_tilesOnBoard[x, y]))
+                        m_bombPosition.Add(m_tilesOnBoard[x, y]);
 
                 }
             }
@@ -1152,9 +1171,12 @@ public class BoardManager : Manager
                         horizontalMatches.Add(m_tilesOnBoard[x + i, y]);
                     }
 
-                    if (matchCount >= 3)
+                    //If we have match of 4 then place a bomb
+                    if (matchCount > 3)
                     {
                         // Utils.DebugUtils.Log("Matched Horizontally " + matchCount);
+                        if(!m_bombPosition.Contains(m_tilesOnBoard[x, y]))
+                            m_bombPosition.Add(m_tilesOnBoard[x, y]);
 
                     }
                 }
@@ -1191,7 +1213,7 @@ public class BoardManager : Manager
 
             if (startTileCode == nextTileCode)
             {
-                //TODO: Add matching tiles
+                
                 matchCount += 1;
 
                 if (!horizontalMatches.Contains(m_tilesOnBoard[x - i, y]))
@@ -1199,9 +1221,12 @@ public class BoardManager : Manager
                     horizontalMatches.Add(m_tilesOnBoard[x - i, y]);
                 }
 
-                if (matchCount >= 3)
+                //If we have a match of 4 // Place bomb
+                //TODO: match of 5 for a special bomb
+                if (matchCount > 3)
                 {
-                   //Utils.DebugUtils.Log("Matched Horizontally " + matchCount);
+                    if (!m_bombPosition.Contains(m_tilesOnBoard[x, y]))
+                        m_bombPosition.Add(m_tilesOnBoard[x, y]);
                 }
             }
 
@@ -1263,7 +1288,9 @@ public class BoardManager : Manager
 
 
 
-    
+    /// <summary>
+    /// This function clears the matched tiles from the board
+    /// </summary>
     public void ClearTiles()
     {
      
@@ -1271,6 +1298,51 @@ public class BoardManager : Manager
         {
             return;
         }
+
+        //Temp list to hold special cleared tiles by any bombs / bonus abilities
+        List<Tile> specialClearedTile = new List<Tile>();
+
+        //Clear Tiles
+        for (int i = 0; i < m_matchedTiles.Count; i++)
+        {
+
+            int x = m_matchedTiles[i].tileData.X;
+            int y = m_matchedTiles[i].tileData.Y;
+    
+            //Get bombed tiles if any
+            if(m_tilesOnBoard[x, y].tileData.tileType == Enums.TileType.Bomb)
+            {
+                //Get corresponding tiles to clear based on bomb type
+                switch(m_tilesOnBoard[x, y].GetComponent<TileBomb>().bombType)
+                {
+                    case Enums.BombType.Row:
+                                              specialClearedTile = specialClearedTile.Union(GetRowTiles(x, y)).ToList();
+                                              break;
+
+
+                    case Enums.BombType.Column:
+                                               specialClearedTile = specialClearedTile.Union(GetColTiles(x, y)).ToList();
+                                               break;
+
+
+                    case Enums.BombType.RowCol:
+                                               specialClearedTile = specialClearedTile.Union(GetRowTiles(x, y).Union(GetColTiles(x,y)).ToList()).ToList();
+                                               break;
+
+
+                    case Enums.BombType.Adjacent:
+                                               specialClearedTile = specialClearedTile.Union(Get3x3AdjacentTiles(x, y)).ToList();
+                                               break;
+                }
+            }
+                           
+        }
+
+        //Add bombed tiles
+        m_matchedTiles = m_matchedTiles.Union(specialClearedTile).ToList();
+        m_matchedTiles = m_matchedTiles.Distinct().ToList();
+
+        specialClearedTile.Clear();
 
         //Clear Tiles
         for (int i = 0; i < m_matchedTiles.Count; i++)
@@ -1286,87 +1358,198 @@ public class BoardManager : Manager
             //Clear Tile
             m_tilesOnBoard[x, y].OnDeSpawnTile();
 
-            //Collapse(x, y);
+ 
         }
 
+        //Create bombs if any
+        CreateBomb();
+       
+        //Collapse rows / cols
         Collapse();
 
-       // print("End Clear Tiles");
 
     }
+
+    /// <summary>
+    /// This function creates and places a bomb on the board 
+    /// </summary>
+    public void CreateBomb()
+    {
+        //Create Bomb
+        for (int i = 0; i < m_bombPosition.Count; i++)
+        {
+            //Get bomb tile from factory
+            Tile bombTile = m_tileManager.GetTileFromFactory(Enums.TileType.Bomb);
+
+            //Get x , y position to place bomb
+            int x = (int)m_bombPosition[i].tileData.X;
+            int y = (int)m_bombPosition[i].tileData.Y;
+
+            //Set bomb position
+            bombTile.transform.position = new Vector2(x, y);
+
+            //Set bomb color and code
+            TileBomb bombComponent = bombTile.GetComponent<TileBomb>();
+            bombComponent.tileData.TILE_CODE = m_bombPosition[i].tileData.TILE_CODE;
+            bombComponent.SwitchBombColor();
+
+            //place bomb on board
+            PlaceTilesOnBoard(bombTile, bombTile.tileData.TILE_CODE, x, y);
+
+            //Remove the bomb position to fill
+            if (m_matchedTiles.Contains(m_bombPosition[i]))
+            {
+                m_matchedTiles.Remove(m_bombPosition[i]);
+            }
+
+        }
+
+        //Clear bomb positions after placing bombs
+        m_bombPosition.Clear();
+
+    }
+
+
+    /// <summary>
+    /// This function returns all the row tiles 
+    /// </summary>
+    /// <param name="x"></param>
+    /// <param name="y"></param>
+    /// <returns></returns>
+    public List<Tile> GetRowTiles(int x, int y)
+    {
+        List<Tile> rowTiles = new List<Tile>();
+
+        for(int i = 0; i < width; i++)
+        {
+            rowTiles.Add(m_tilesOnBoard[i, y]);
+        }
+
+        return rowTiles;
+    }
+
+
+    /// <summary>
+    /// This function returns all the column tiles of column 
+    /// </summary>
+    /// <param name="x"></param>
+    /// <param name="y"></param>
+    /// <returns></returns>
+    public List<Tile> GetColTiles(int x, int y)
+    {
+        List<Tile> colTiles = new List<Tile>();
+
+        for (int i = 0; i < height; i++)
+        {
+            colTiles.Add(m_tilesOnBoard[x, i]);
+        }
+
+        return colTiles;
+    }
+
+
+    /// <summary>
+    /// This function returns 3x3 adjacent tiles
+    /// </summary>
+    /// <param name="x"></param>
+    /// <param name="y"></param>
+    /// <returns></returns>
+    public List<Tile> Get3x3AdjacentTiles(int x, int y)
+    {
+        List<Tile> adjTiles = new List<Tile>();
+
+        for (int i = -1; i < 2; i++)
+        {
+            for (int j = -1; j < 2; j++)
+            {
+                if(CheckBounds(x + i, y + j))
+                {
+                    adjTiles.Add(m_tilesOnBoard[x + i, y + j]);
+                }
+               
+            }
+        }
+
+        return adjTiles;
+    }
+
+
+
 
 
     //Clears all tiles from col and row
-  /*  public void ClearTiles(int col, int row, bool clearRow = false, bool clearCol = false)
-    {
-        if(clearRow == false & clearCol == false)
-        {
-            ClearTiles(new Vector2(col, row));
-            return;
-        }
+    /*  public void ClearTiles(int col, int row, bool clearRow = false, bool clearCol = false)
+      {
+          if(clearRow == false & clearCol == false)
+          {
+              ClearTiles(new Vector2(col, row));
+              return;
+          }
 
-        if(clearRow)
-        {
-            //Clear row
-            for (int i = 0; i < width; i++)
-            {
-                //yield return new WaitForSeconds(0.2f);
+          if(clearRow)
+          {
+              //Clear row
+              for (int i = 0; i < width; i++)
+              {
+                  //yield return new WaitForSeconds(0.2f);
 
-                //Make it Empty tile
-                m_logicalBoard[i, row] = 0;
+                  //Make it Empty tile
+                  m_logicalBoard[i, row] = 0;
 
-                //Clear Tile
-                m_tilesOnBoard[i, row].OnDeSpawnTile();
+                  //Clear Tile
+                  m_tilesOnBoard[i, row].OnDeSpawnTile();
 
-                Collapse(i, row);
-            }
-        }
+                  Collapse(i, row);
+              }
+          }
 
-        if(clearCol)
-        {
+          if(clearCol)
+          {
 
-            //Clear col
-            for (int i = 0; i < height; i++)
-            {
-                //yield return new WaitForSeconds(0.2f);
+              //Clear col
+              for (int i = 0; i < height; i++)
+              {
+                  //yield return new WaitForSeconds(0.2f);
 
-                //Make it Empty tile
-                m_logicalBoard[col, i] = 0;
+                  //Make it Empty tile
+                  m_logicalBoard[col, i] = 0;
 
-                //Clear Tile
-                m_tilesOnBoard[col, i].OnDeSpawnTile();
+                  //Clear Tile
+                  m_tilesOnBoard[col, i].OnDeSpawnTile();
 
-                Collapse(col, i);
-            }
-        }
-
-
+                  Collapse(col, i);
+              }
+          }
 
 
 
 
-    }
 
 
-    public void ClearTiles(Vector2 index)
-    {
-        int x = (int)index.x;
-        int y = (int)index.y;
-
-        //Make it Empty tile
-        m_logicalBoard[x, y] = 0;
-
-        //Clear Tile
-        m_tilesOnBoard[x, y].OnDeSpawnTile();
-
-        Collapse(x, y);
-    }
-
-*/
-   
+      }
 
 
+      public void ClearTiles(Vector2 index)
+      {
+          int x = (int)index.x;
+          int y = (int)index.y;
 
+          //Make it Empty tile
+          m_logicalBoard[x, y] = 0;
+
+          //Clear Tile
+          m_tilesOnBoard[x, y].OnDeSpawnTile();
+
+          Collapse(x, y);
+      }
+
+  */
+
+
+
+    /// <summary>
+    /// This function collapses all the tiles down into the cleared cells
+    /// </summary>
     public void Collapse()
     {
 
@@ -1452,7 +1635,10 @@ public class BoardManager : Manager
 
     }*/
 
-
+    
+    /// <summary>
+    ///  This function fills in new tiles after all tiles have been cleared and collapsed
+    /// </summary>
     public void FillNewTiles()
     {
        

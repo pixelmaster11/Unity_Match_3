@@ -30,8 +30,8 @@ public class TileManager : Manager
 
         if (m_timer >= 0.5f && canAcceptInputs)
         {
-            m_boardManager.ClearHighlightedMoves();
-            m_boardManager.GetRandomSuggestedMove(1);
+            //m_boardManager.ClearHighlightedMoves();
+            //m_boardManager.GetRandomSuggestedMove(1);
             m_timer = 0;
         }
 
@@ -79,6 +79,20 @@ public class TileManager : Manager
     public Tile GetTileFromFactory(int tileCode)
     {
         Tile tile = m_tileFactory.GetTile(tileCode);
+        tile.OnSpawnTile(this);
+
+        return tile;
+    }
+
+
+    /// <summary>
+    /// Return a tile from the tile pool with corresponding tileType
+    /// </summary>
+    /// <param name="tileCode">Tile of tileType to return</param>
+    /// <returns>Return a tile from the tile pool with corresponding tileType</returns>
+    public Tile GetTileFromFactory(Enums.TileType tileType)
+    {
+        Tile tile = m_tileFactory.GetTile(tileType);
         tile.OnSpawnTile(this);
 
         return tile;

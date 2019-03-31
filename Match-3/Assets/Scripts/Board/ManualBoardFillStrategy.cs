@@ -18,7 +18,7 @@ public class ManualBoardFillStrategy : IBoardFillStrategy
                                           };
 
 
-    public int FillBoard(int width, int height, int i, int j, int map = 0, bool generateRandom = false)
+    public int FillBoard(int width, int height, int i, int j, int maxTileCodes, int map = 0, bool generateRandom = false)
     {
      
        
@@ -26,7 +26,7 @@ public class ManualBoardFillStrategy : IBoardFillStrategy
         {
             Random.InitState((int)System.DateTime.Now.Ticks);
 
-            return Random.Range(1, 9);
+            return Random.Range(1, maxTileCodes + 1);
         }
 
         //check dimensions of map with board dimensions 

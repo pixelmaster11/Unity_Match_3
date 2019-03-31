@@ -5,14 +5,14 @@ using UnityEngine;
 
 public abstract class Tile : MonoBehaviour
 {
+    public AnimationCurve animationCurve;
     public TileData tileData;
     public TileGraphics tileGraphics;
     protected TileManager m_tileManager;
+    public Enums.TileColor tileColor;
 
-    public AnimationCurve animationCurve;
 
-  
-    
+
 
     //Animate on spawn
     public virtual void OnSpawnTile(TileManager tm)

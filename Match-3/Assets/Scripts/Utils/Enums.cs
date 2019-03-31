@@ -13,5 +13,25 @@ public class Enums
         Bomb
     };
 
+
+    public enum BombType
+    {
+        Row,
+        Column,
+        RowCol,
+        Adjacent
+    };
+
+
+    public enum TileColor
+    {
+        Red,
+        Green,
+        Pink,
+        Aqua,
+        Blue,
+        Yellow,
+        Purple
+    };
    
 }
