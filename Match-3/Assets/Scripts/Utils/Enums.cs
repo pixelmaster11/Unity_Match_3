@@ -33,5 +33,24 @@ public class Enums
         Yellow,
         Purple
     };
-   
+
+
+
+    public enum GoalType
+    {
+        MoveBased,
+        TimeBased
+    };
+
+
+    //The global game states
+    public enum StateType
+    {
+        Init = 0,
+        Menu,
+        GamePlay,
+        GameOver,
+        Pause
+    };
+
 }

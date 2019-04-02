@@ -29,16 +29,16 @@ public class TileBomb : Tile
 
     public override void OnDeSpawnTile()
     {
-        
+        tileData.TILE_CODE = Constants.BOMB_TILE_CODE;
         base.OnDeSpawnTile();
     }  
 
 
-    public void SwitchBombColor()
+    public void SwitchBombColor(int code)
     {
         
 
-        switch(tileData.TILE_CODE)
+        switch(code)
         {
             case Constants.RED_TILE_CODE:
                 spriteRenderer.color = Color.red;
@@ -79,6 +79,10 @@ public class TileBomb : Tile
             case Constants.PINK_TILE_CODE:
                 spriteRenderer.color = new Color(255, 0, 215);
    
+                break;
+
+            case Constants.ORANGE_TILE_CODE:
+                spriteRenderer.color = new Color(255, 100, 0);
                 break;
 
 

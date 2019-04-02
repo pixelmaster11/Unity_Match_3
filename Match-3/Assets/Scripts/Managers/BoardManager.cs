@@ -7,6 +7,16 @@ public class BoardManager : Manager
 {
     [SerializeField]
     private TileManager m_tileManager;
+
+    [SerializeField]
+    private AudioManager m_audioManager;
+
+    [SerializeField]
+    private ScoreManager m_scoreManager;
+
+    [SerializeField]
+    private GameObject m_bgTile;
+
     private IBoardFillStrategy m_boardFillStrategy;
     private IBoardShuffleStrategy m_boardShuffleStrategy;
 
@@ -21,7 +31,6 @@ public class BoardManager : Manager
     List<Vector2> possibleMoves = new List<Vector2>();
     List<Tile> highlightedMoves = new List<Tile>();
 
-
     public int width;
     public int height;
     public float cameraOffset;
@@ -32,7 +41,8 @@ public class BoardManager : Manager
     {
         
        
-        SetupCamera();    
+        SetupCamera();
+        InitBGTiles();
        
     }
 
@@ -43,6 +53,17 @@ public class BoardManager : Manager
     }
 
 
+    public void InitBGTiles()
+    {
+        for(int i = 0; i < width; i++)
+        {
+            for(int j = 0; j < height; j++)
+            {
+                GameObject go = (GameObject) Instantiate(m_bgTile, new Vector2(i, j), Quaternion.identity);
+                go.transform.parent = m_tileManager.transform;
+            }
+        }
+    }
 
 
     /// <summary>
@@ -244,7 +265,9 @@ public class BoardManager : Manager
     }
 
 
-
+    /// <summary>
+    /// This function checks for all matches on the board 
+    /// </summary>
     public void CheckAllBoardForMatch()
     {
         for (int i = 0; i < width; i++)
@@ -262,6 +285,10 @@ public class BoardManager : Manager
     }
 
 
+    /// <summary>
+    /// This functions checks if board has atleast a single match
+    /// </summary>
+    /// <returns></returns>
     public bool BoardHasMatch()
     {
         if(m_matchedTiles.Count < 3)
@@ -303,7 +330,10 @@ public class BoardManager : Manager
     }
 
 
-
+    /// <summary>
+    /// This functions checks if there is atleast 1 possible move
+    /// </summary>
+    /// <returns></returns>
     public bool IsThereAPossibleMatch()
     {
         SuggestMoves();
@@ -1039,10 +1069,12 @@ public class BoardManager : Manager
                     if (matchCount > 3)
                     {
                         //Utils.DebugUtils.Log("Matched Vertically " + matchCount);
-                         if(!m_bombPosition.Contains(m_tilesOnBoard[x,y]))
+                         if(!m_bombPosition.Contains(m_tilesOnBoard[x,y]) && !m_matchedTiles.Contains(m_tilesOnBoard[x,y]))
                             m_bombPosition.Add(m_tilesOnBoard[x, y]);
 
                     }
+
+
                 }
 
                 //If the tile above has different tile code then end the up search
@@ -1094,7 +1126,7 @@ public class BoardManager : Manager
                 if (matchCount > 3)
                 {
                     //Utils.DebugUtils.Log("Matched vertically " + matchCount);
-                    if (!m_bombPosition.Contains(m_tilesOnBoard[x, y]))
+                    if (!m_bombPosition.Contains(m_tilesOnBoard[x, y]) && !m_matchedTiles.Contains(m_tilesOnBoard[x, y]))
                         m_bombPosition.Add(m_tilesOnBoard[x, y]);
 
                 }
@@ -1175,7 +1207,7 @@ public class BoardManager : Manager
                     if (matchCount > 3)
                     {
                         // Utils.DebugUtils.Log("Matched Horizontally " + matchCount);
-                        if(!m_bombPosition.Contains(m_tilesOnBoard[x, y]))
+                        if(!m_bombPosition.Contains(m_tilesOnBoard[x, y]) && !m_matchedTiles.Contains(m_tilesOnBoard[x, y]))
                             m_bombPosition.Add(m_tilesOnBoard[x, y]);
 
                     }
@@ -1225,7 +1257,7 @@ public class BoardManager : Manager
                 //TODO: match of 5 for a special bomb
                 if (matchCount > 3)
                 {
-                    if (!m_bombPosition.Contains(m_tilesOnBoard[x, y]))
+                    if (!m_bombPosition.Contains(m_tilesOnBoard[x, y]) && !m_matchedTiles.Contains(m_tilesOnBoard[x, y]))
                         m_bombPosition.Add(m_tilesOnBoard[x, y]);
                 }
             }
@@ -1338,6 +1370,8 @@ public class BoardManager : Manager
                            
         }
 
+        specialClearedTile = specialClearedTile.Distinct().ToList();
+
         //Add bombed tiles
         m_matchedTiles = m_matchedTiles.Union(specialClearedTile).ToList();
         m_matchedTiles = m_matchedTiles.Distinct().ToList();
@@ -1351,19 +1385,27 @@ public class BoardManager : Manager
             int x = m_matchedTiles[i].tileData.X;
             int y = m_matchedTiles[i].tileData.Y;
 
-                
+
+            if (m_scoreManager.goalTileCode == m_logicalBoard[x, y])
+            {
+                m_scoreManager.UpdateTilesCleared();
+            }
+
             //Make it Empty tile
             m_logicalBoard[x, y] = 0;
 
             //Clear Tile
             m_tilesOnBoard[x, y].OnDeSpawnTile();
 
+           
  
         }
 
         //Create bombs if any
         CreateBomb();
        
+
+
         //Collapse rows / cols
         Collapse();
 
@@ -1379,7 +1421,7 @@ public class BoardManager : Manager
         for (int i = 0; i < m_bombPosition.Count; i++)
         {
             //Get bomb tile from factory
-            Tile bombTile = m_tileManager.GetTileFromFactory(Enums.TileType.Bomb);
+            Tile bombTile = m_tileManager.GetTileFromFactory(Constants.BOMB_TILE_CODE);
 
             //Get x , y position to place bomb
             int x = (int)m_bombPosition[i].tileData.X;
@@ -1391,10 +1433,11 @@ public class BoardManager : Manager
             //Set bomb color and code
             TileBomb bombComponent = bombTile.GetComponent<TileBomb>();
             bombComponent.tileData.TILE_CODE = m_bombPosition[i].tileData.TILE_CODE;
-            bombComponent.SwitchBombColor();
-
+            
             //place bomb on board
-            PlaceTilesOnBoard(bombTile, bombTile.tileData.TILE_CODE, x, y);
+            PlaceTilesOnBoard(bombTile, m_bombPosition[i].tileData.TILE_CODE, x, y);
+
+            bombComponent.SwitchBombColor(m_bombPosition[i].tileData.TILE_CODE);
 
             //Remove the bomb position to fill
             if (m_matchedTiles.Contains(m_bombPosition[i]))
@@ -1403,6 +1446,17 @@ public class BoardManager : Manager
             }
 
         }
+
+        if(m_bombPosition.Count > 0)
+        {
+            m_audioManager.PlaySFX("OnBomb");
+        }
+
+        else
+        {
+            m_audioManager.PlaySFX("OnMatch");
+        }
+       
 
         //Clear bomb positions after placing bombs
         m_bombPosition.Clear();
@@ -1606,6 +1660,10 @@ public class BoardManager : Manager
         }
 
         
+        if(m_matchedTiles.Count > 3)
+        {
+            m_audioManager.PlaySFX("OnBomb");
+        }
    
        
     }
@@ -1645,14 +1703,25 @@ public class BoardManager : Manager
 
         while(m_matchedTiles.Count > 0)
         {
-            // 1 - 8 tile codes
-            Tile newTile = m_tileManager.GetTileFromFactory(Random.Range(1,9));
-            
+            // 1 - 8 tile codes             
+            Tile newTile = m_tileManager.GetTileFromFactory(Random.Range(1, Constants.MAX_TILE_CODES + 1));
+
+            int iterations = 1;
 
             while(m_matchedTiles.Contains(newTile))
             {
-                newTile = m_tileManager.GetTileFromFactory(Random.Range(1, 9));
+                
+                 newTile = m_tileManager.GetTileFromFactory(Random.Range(1, Constants.MAX_TILE_CODES + 1));
+                 iterations++;
+
+                if(iterations >= 100)
+                {
+                    newTile = m_tileManager.GetNewTileFromFactory(Random.Range(1, Constants.MAX_TILE_CODES + 1));
+                    break;
+                }
             }
+
+
 
          
 
@@ -1675,9 +1744,12 @@ public class BoardManager : Manager
 
             m_matchedTiles.RemoveAt(0);
 
+            m_audioManager.PlaySFX("OnFill");
+
             //yield return new WaitForSeconds(newTile.tileGraphics.tileFallSpeed);
 
-            
+           
+
         }
 
 

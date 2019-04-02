@@ -98,20 +98,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 6364273954afb5644980ae9328a09e7f, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  tileData:
-    TILE_CODE: 3
-    X: 0
-    Y: 0
-    AcceptClick: 0
-    tileType: 0
-  tileGraphics:
-    tileFallSpeed: 0.6
-    tileSwapSpeed: 0.3
-    tileFalling: 0
-    swapAnimating: 0
-    tileClicked: 0
-    tileHighlighted: 0
-    highlightObject: {fileID: 1446595536978438}
   animationCurve:
     serializedVersion: 2
     m_Curve:
@@ -136,6 +122,20 @@ MonoBehaviour:
     m_PreInfinity: 2
     m_PostInfinity: 2
     m_RotationOrder: 4
+  tileData:
+    TILE_CODE: 10
+    X: 0
+    Y: 0
+    AcceptClick: 0
+    tileType: 2
+  tileGraphics:
+    tileFallSpeed: 0.6
+    tileSwapSpeed: 0.3
+    tileFalling: 0
+    swapAnimating: 0
+    tileClicked: 0
+    tileHighlighted: 0
+    highlightObject: {fileID: 1446595536978438}
 --- !u!212 &212189427122199602
 SpriteRenderer:
   m_ObjectHideFlags: 1
@@ -216,9 +216,9 @@ SpriteRenderer:
   m_LightmapParameters: {fileID: 0}
   m_SortingLayerID: 0
   m_SortingLayer: 0
-  m_SortingOrder: 10
-  m_Sprite: {fileID: 21300000, guid: 81b20a183956a3d44bd5ba9eef03f062, type: 3}
-  m_Color: {r: 0, g: 0, b: 0, a: 1}
+  m_SortingOrder: 2
+  m_Sprite: {fileID: 21300000, guid: f17a173e4dbfd7045a9deb0728c35da3, type: 3}
+  m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_FlipX: 0
   m_FlipY: 0
   m_DrawMode: 0

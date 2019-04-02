@@ -9,7 +9,7 @@ public abstract class Tile : MonoBehaviour
     public TileData tileData;
     public TileGraphics tileGraphics;
     protected TileManager m_tileManager;
-    public Enums.TileColor tileColor;
+    
 
 
 

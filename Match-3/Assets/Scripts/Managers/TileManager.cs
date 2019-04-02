@@ -10,12 +10,19 @@ public class TileManager : Manager
     [SerializeField]
     private TileFactory m_tileFactory;
 
+    [SerializeField]
+    private AudioManager m_audioManager;
+
+    [SerializeField]
+    private ScoreManager m_scoreManager;
+
     private Tile m_clickedTile;
     private Tile m_targetTile;
 
     public bool canAcceptInputs = false;
-
+    public bool gameOver = false;
     float m_timer = 0;
+    public bool pause = false;
 
     public override void ManagedUpdate()
     {
@@ -25,17 +32,19 @@ public class TileManager : Manager
     }
 
 
+   
+
     private void Update()
     {
 
-        if (m_timer >= 0.5f && canAcceptInputs)
+        if (m_timer >= 5f && canAcceptInputs && !gameOver)
         {
-            //m_boardManager.ClearHighlightedMoves();
-            //m_boardManager.GetRandomSuggestedMove(1);
+            m_boardManager.ClearHighlightedMoves();
+            m_boardManager.GetRandomSuggestedMove(1);
             m_timer = 0;
         }
 
-        if (canAcceptInputs)
+        if (canAcceptInputs && !gameOver)
         {
             m_timer += Time.deltaTime;
         }
@@ -46,14 +55,26 @@ public class TileManager : Manager
         }
        
 
+        if(pause)
+        {
+            canAcceptInputs = false;
+            Time.timeScale = 0;
+        }
+
+        else
+        {
+            canAcceptInputs = true;
+            Time.timeScale = 1;
+        }
+
         
     }
 
     private void OnEnable()
     {
-        m_tileFactory.CreateTilePool();  
-       StartCoroutine(m_boardManager.InitializeBoard());
-              
+        m_tileFactory.CreateTilePool();
+        StartCoroutine(m_boardManager.InitializeBoard());
+
     }
 
 
@@ -84,20 +105,6 @@ public class TileManager : Manager
         return tile;
     }
 
-
-    /// <summary>
-    /// Return a tile from the tile pool with corresponding tileType
-    /// </summary>
-    /// <param name="tileCode">Tile of tileType to return</param>
-    /// <returns>Return a tile from the tile pool with corresponding tileType</returns>
-    public Tile GetTileFromFactory(Enums.TileType tileType)
-    {
-        Tile tile = m_tileFactory.GetTile(tileType);
-        tile.OnSpawnTile(this);
-
-        return tile;
-    }
-
     /// <summary>
     /// Return a tile from the tile pool with corresponding tileCode
     /// </summary>
@@ -113,6 +120,10 @@ public class TileManager : Manager
 
 
 
+
+
+
+
     /// <summary>
     /// Called when a tile is touched / clicked for the first time
     /// </summary>
@@ -120,7 +131,7 @@ public class TileManager : Manager
     public void ClickedTile(Tile tile)
     {
         //If no tile is clicked i.e first touch on tile
-        if (m_clickedTile == null && canAcceptInputs)
+        if (m_clickedTile == null && canAcceptInputs && !gameOver)
         {
             
             m_clickedTile = tile;
@@ -135,7 +146,7 @@ public class TileManager : Manager
     public void DragTile(Tile tile)
     {
         //If we already have a tile clicked, then assign the dragged tile as target tile to swap with
-        if (m_clickedTile != null && m_targetTile == null && canAcceptInputs)
+        if (m_clickedTile != null && m_targetTile == null && canAcceptInputs && !gameOver)
         {
             m_targetTile = tile;
 
@@ -148,7 +159,7 @@ public class TileManager : Manager
     public void ReleaseTile()
     {
         //If we have both start and target tiles then swap if adjacent
-        if (m_targetTile != null && m_clickedTile != null && canAcceptInputs)
+        if (m_targetTile != null && m_clickedTile != null && canAcceptInputs && !gameOver)
         {
 
             //Check if tiles are adjacent then swap them 
@@ -218,6 +229,7 @@ public class TileManager : Manager
         //Animate Swap      
         AnimateTile(m_clickedTile, targetIndex, m_clickedTile.tileGraphics.tileSwapSpeed);
         AnimateTile(m_targetTile, startIndex, m_targetTile.tileGraphics.tileSwapSpeed);
+   
 
         //Wait for swap animation to finish
         yield return new WaitForSeconds(m_targetTile.tileGraphics.tileSwapSpeed);
@@ -233,7 +245,9 @@ public class TileManager : Manager
         //No Match Found // Move Tiles back to their original position before swap
         if (!m_boardManager.FindMatch(startIndex, targetIndex, true))
         {
-                     
+
+            m_audioManager.PlaySFX("NoSwap");
+
             //Animate tiles again to their previous positions
             AnimateTile(m_clickedTile, startIndex, m_clickedTile.tileGraphics.tileSwapSpeed);
             AnimateTile(m_targetTile, targetIndex, m_targetTile.tileGraphics.tileSwapSpeed);
@@ -250,40 +264,46 @@ public class TileManager : Manager
 
         else
         {
+            m_scoreManager.UpdateMoves();
 
             do
             {
-                //Wait for swap animation to finish
-                //yield return new WaitForSeconds(m_targetTile.tileGraphics.tileSwapSpeed);
+                
 
+                //Clear and collapse
                 m_boardManager.ClearTiles();
 
                 //Wait for collapse animation to finish
                 yield return new WaitForSeconds(m_targetTile.tileGraphics.tileFallSpeed);
 
-                //print("Begin Fill new tiles");
-
+         
+                //Fill new
                 m_boardManager.FillNewTiles();
 
                 yield return new WaitForSeconds(m_targetTile.tileGraphics.tileFallSpeed);
 
+                //Check for matches
                 m_boardManager.CheckAllBoardForMatch();
 
+                //Check for possible matches
                 while (!m_boardManager.IsThereAPossibleMatch())
                 {
+                    //Shuffle board if no possible match
                     m_boardManager.Shuffling = true;
                     m_boardManager.ShuffleBoard();
                     yield return null;
                 }
 
-                
-               
+                //Check for matches after shuffle
+                m_boardManager.CheckAllBoardForMatch();
+
             }
 
-            while (m_boardManager.BoardHasMatch()); 
+            //Loop till there is match
+            while (m_boardManager.BoardHasMatch());
 
-        
-            
+
+           
 
 
 
@@ -298,6 +318,12 @@ public class TileManager : Manager
 
 
     
+    public void Won(bool won)
+    {
+        gameOver = true;
+        canAcceptInputs = false;
+    }
+
 
     public void AnimateTile(Tile tile, Vector2 destination, float animationTime)
     {

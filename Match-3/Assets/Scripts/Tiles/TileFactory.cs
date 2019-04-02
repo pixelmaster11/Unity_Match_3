@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 
+
 public class TileFactory : MonoBehaviour
 {
     [SerializeField]
@@ -11,6 +12,7 @@ public class TileFactory : MonoBehaviour
     int m_poolAmount;
 
     private List<Tile> m_tilePool;
+
 
 
 
@@ -48,10 +50,10 @@ public class TileFactory : MonoBehaviour
 
         return tile;
     }
-  
 
 
 
+   
 
     /// <summary>
     /// Returns a tile from tile pool with corresponding tile ID code
@@ -79,10 +81,9 @@ public class TileFactory : MonoBehaviour
                 tile.gameObject.SetActive(false);
                 tile.transform.parent = this.transform;
                 m_tilePool.Add(tile);
-            }
-
-         
-         
+                break;
+            }    
+        
         }
 
         if(tile == null)
@@ -94,104 +95,15 @@ public class TileFactory : MonoBehaviour
     }
 
 
-    /// <summary>
-    /// Returns a tile from tile pool with corresponding tile type
-    /// </summary>
-    /// <param name="tileType">Tile type to fetch tile</param>
-    /// <returns></returns>
-    public Tile GetTile(Enums.TileType tileType)
-    {
-        for (int i = 0; i < m_tilePool.Count; i++)
-        {
-            if (!m_tilePool[i].gameObject.activeSelf && tileType == m_tilePool[i].tileData.tileType)
-            {
-                return m_tilePool[i];
-            }
-        }
-
-
-        Tile tile = null;
-
-        for (int i = 0; i < m_tilePrefabs.Length; i++)
-        {
-            if (m_tilePrefabs[i].tileData.tileType == tileType)
-            {
-                tile = Instantiate(m_tilePrefabs[i]) as Tile;
-                tile.gameObject.SetActive(false);
-                tile.transform.parent = this.transform;
-                m_tilePool.Add(tile);
-            }
-
-
-
-        }
-
-        if (tile == null)
-        {
-            Utils.DebugUtils.Log("Tile type: " + tileType + " is invalid");
-        }
-
-        return tile;
-    }
-
 
     /// <summary>
-    /// Returns a tile from tile pool with corresponding tile type
-    /// </summary>
-    /// <param name="tileType">Tile type to fetch tile</param>
-    /// <returns></returns>
-    public Tile GetRandomTileByType()
-    {
-
-        var types = System.Enum.GetValues(typeof(Enums.TileType));
-
-        Enums.TileType tileType = (Enums.TileType) types.GetValue(Random.Range(0, types.Length));
-
-
-
-        for (int i = 0; i < m_tilePool.Count; i++)
-        {
-            if (!m_tilePool[i].gameObject.activeSelf && tileType == m_tilePool[i].tileData.tileType)
-            {
-                return m_tilePool[i];
-            }
-        }
-
-
-        Tile tile = null;
-
-        for (int i = 0; i < m_tilePrefabs.Length; i++)
-        {
-            if (m_tilePrefabs[i].tileData.tileType == tileType)
-            {
-                tile = Instantiate(m_tilePrefabs[i]) as Tile;
-                tile.gameObject.SetActive(false);
-                tile.transform.parent = this.transform;
-                m_tilePool.Add(tile);
-            }
-
-
-
-        }
-
-        if (tile == null)
-        {
-            Utils.DebugUtils.Log("Tile type: " + tileType + " is invalid");
-        }
-
-        return tile;
-    }
-
-
-    /// <summary>
-    /// Creates and returns a new tile  with corresponding tile ID code
+    /// Returns a New tile corresponding tile ID code
     /// </summary>
     /// <param name="tileCode">Tile ID code to fetch tile</param>
     /// <returns></returns>
     public Tile GetNewTile(int tileCode)
     {
-        
-
+         
         Tile tile = null;
 
         for (int i = 0; i < m_tilePrefabs.Length; i++)
@@ -202,9 +114,8 @@ public class TileFactory : MonoBehaviour
                 tile.gameObject.SetActive(false);
                 tile.transform.parent = this.transform;
                 m_tilePool.Add(tile);
+                break;
             }
-
-
 
         }
 
@@ -215,6 +126,7 @@ public class TileFactory : MonoBehaviour
 
         return tile;
     }
+
 
 
 }
