@@ -23,10 +23,12 @@ public class ScoreManager : Manager
     public int totalTiles;
     public int goalTileCode;
 
-
+    private int m_prevGoalTileCode;
 
     private void Start()
     {
+        goalTileCode = Random.Range(1, Constants.MAX_TILE_CODES + 1);
+        m_prevGoalTileCode = goalTileCode;
         SetGoal();
     }
 
@@ -50,7 +52,8 @@ public class ScoreManager : Manager
 
         }
 
-        goalTileCode = Random.Range(1, Constants.MAX_TILE_CODES + 1);
+
+        
         m_uimanager.SetGoalTileImage(goalTileCode);
         m_uimanager.SetTotalTilesText(totalTiles);
         UpdateTilesCleared();
@@ -72,7 +75,7 @@ public class ScoreManager : Manager
 
           
            m_timer++;
-           m_uimanager.UpdateTimerText((totalTimeMins * 60 + totalTimeSecs) - m_timer);
+           m_uimanager.UpdateTimerText((totalTimeMins * 60 + totalTimeSecs) - m_timer, (totalTimeMins * 60 + totalTimeSecs));
 
 
             yield return new WaitForSeconds(1);
@@ -126,12 +129,32 @@ public class ScoreManager : Manager
         else
         {
             m_tileManager.Won(false);
-        }
-
-      
+        }    
 
     }
 
+
+    public void Restart()
+    {
+        OnReset();
+        goalTileCode = m_prevGoalTileCode;
+    }
+
+    public void NewLevel()
+    {
+        OnReset();
+        goalTileCode = Random.Range(1, Constants.MAX_TILE_CODES + 1);
+    }
+
+
+    public void OnReset()
+    {
+        m_currentMoves = -1;
+        m_currentTiles = -1;
+        m_timer = 0;
+        StopAllCoroutines();
+        SetGoal();
+    }
 
     public override void ManagedUpdate()
     {

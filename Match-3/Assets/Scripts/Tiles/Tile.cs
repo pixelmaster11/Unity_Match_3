@@ -29,6 +29,7 @@ public abstract class Tile : MonoBehaviour
         HighlightTile(false);
         this.transform.parent = m_tileManager.transform;
 
+        transform.position = Vector2.zero;
         tileData.AcceptClick = false;
         tileGraphics.swapAnimating = false;
         tileGraphics.tileFalling = false;

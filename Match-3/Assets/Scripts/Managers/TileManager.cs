@@ -16,13 +16,16 @@ public class TileManager : Manager
     [SerializeField]
     private ScoreManager m_scoreManager;
 
+    [SerializeField]
+    private UIManager m_uiManager;
+
     private Tile m_clickedTile;
     private Tile m_targetTile;
 
     public bool canAcceptInputs = false;
     public bool gameOver = false;
     float m_timer = 0;
-    public bool pause = false;
+    private bool m_pause = false;
 
     public override void ManagedUpdate()
     {
@@ -53,9 +56,16 @@ public class TileManager : Manager
         {
             m_timer = 0;
         }
-       
+          
+        
+    }
 
-        if(pause)
+
+    public void OnPause()
+    {
+        m_pause = !m_pause;
+
+        if(m_pause)
         {
             canAcceptInputs = false;
             Time.timeScale = 0;
@@ -67,6 +77,37 @@ public class TileManager : Manager
             Time.timeScale = 1;
         }
 
+
+        m_uiManager.Pause(m_pause);
+    }
+
+
+    public void OnNewLevel()
+    {
+        m_timer = 0;
+        canAcceptInputs = false;
+        gameOver = false;
+        m_pause = false;
+
+        StopAllCoroutines();
+
+        m_scoreManager.NewLevel();
+        m_boardManager.NewLevel();
+    }
+
+    public void OnRestart()
+    {
+        m_timer = 0;
+        canAcceptInputs = false;
+        gameOver = false;
+       
+
+        StopAllCoroutines();
+
+        OnPause();
+
+        m_scoreManager.Restart();
+        m_boardManager.Restart();
         
     }
 
@@ -224,8 +265,8 @@ public class TileManager : Manager
 
     private IEnumerator SwapTiles(Vector2 startIndex, Vector2 targetIndex)
     {
-    
 
+      
         //Animate Swap      
         AnimateTile(m_clickedTile, targetIndex, m_clickedTile.tileGraphics.tileSwapSpeed);
         AnimateTile(m_targetTile, startIndex, m_targetTile.tileGraphics.tileSwapSpeed);

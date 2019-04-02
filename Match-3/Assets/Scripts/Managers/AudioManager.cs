@@ -6,6 +6,9 @@ using System.Linq;
 public class AudioManager : Manager
 {
 
+    [SerializeField]
+    private UIManager m_uiManager;
+
     [System.Serializable]
     public struct AudioData
     {
@@ -23,12 +26,13 @@ public class AudioManager : Manager
     private AudioSource m_audioSourceBG;
 
 
+    private bool m_SFX_Enabled = true;
+    private bool m_Music_Enabled = true;
+
     private void Start()
     {
         PlayBG("BG");
     }
-
-
 
 
     public override void ManagedUpdate()
@@ -55,21 +59,29 @@ public class AudioManager : Manager
     }
 
     
-    public void VolumeControl(float value, bool isSFX)
+    public void VolumeControlSFX()
     {
+        m_SFX_Enabled = !m_SFX_Enabled;
 
-        if(isSFX)
-        {
-            m_audioSourceSFX.volume =  Mathf.Clamp01(value);
-        }
-
+        if (m_SFX_Enabled)
+            m_audioSourceSFX.volume = 1;
         else
-        {
-            m_audioSourceBG.volume = Mathf.Clamp01(value);
-        }
+            m_audioSourceSFX.volume = 0;
 
+        m_uiManager.SetSFX(m_SFX_Enabled);
+        
     }
+    public void VolumeControlMusic()
+    {
+        m_Music_Enabled = !m_Music_Enabled;
 
+        if (m_Music_Enabled)
+            m_audioSourceBG.volume = 1;
+        else
+            m_audioSourceBG.volume = 0;
 
+        m_uiManager.SetMusic(m_Music_Enabled);
+       
+    }
 
 }

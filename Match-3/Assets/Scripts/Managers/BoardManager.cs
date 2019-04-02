@@ -35,7 +35,7 @@ public class BoardManager : Manager
     public int height;
     public float cameraOffset;
 
-    
+    private int[,] m_storedLogicalBoard;
 
     private void Start()
     {
@@ -75,7 +75,10 @@ public class BoardManager : Manager
         m_logicalBoard = new int[width, height];
         m_tilesOnBoard = new Tile[width, height];    
         m_matchedTiles = new List<Tile>();
-      
+        m_bombPosition = new List<Tile>();
+        possibleMoves = new List<Vector2>();
+        highlightedMoves = new List<Tile>();
+
 
         Random.InitState((int)System.DateTime.Now.Ticks);
 
@@ -172,6 +175,8 @@ public class BoardManager : Manager
             }
 
         }
+
+        m_storedLogicalBoard = m_logicalBoard;
 
         yield return new WaitForSeconds(1);
 
@@ -1755,6 +1760,88 @@ public class BoardManager : Manager
 
      
     }
+
+
+    public void Restart()
+    {        
+        StopAllCoroutines();
+        LoadPreviousTiles();
+    }
+
+    public void NewLevel()
+    {
+        StopAllCoroutines();
+        ClearAllTiles();
+        StartCoroutine(InitializeBoard());
+    }
+
+
+    public void ClearAllTiles()
+    {
+        for (int i = 0; i < width; i++)
+        {
+            for (int j = 0; j < height; j++)
+            {
+
+                //Make it empty
+                m_logicalBoard[i, j] = 0;
+
+                //Clear Tile
+                m_tilesOnBoard[i, j].OnDeSpawnTile();
+
+
+            }
+        }
+
+
+    }
+
+    public void LoadPreviousTiles()
+    {
+        for(int i = 0; i < width; i++)
+        {
+            for(int j = 0; j < height; j++)
+            {
+
+           
+
+                //Restore old board
+                m_logicalBoard[i, j] = m_storedLogicalBoard[i, j];
+
+                //Clear Tile
+                m_tilesOnBoard[i, j].OnDeSpawnTile();
+
+
+                //Get the appropriate tile based on tile code
+                Tile tile_to_place = m_tileManager.GetTileFromFactory(m_logicalBoard[i , j]);
+
+                //Place the tile on board
+                PlaceTilesOnBoard(tile_to_place, tile_to_place.tileData.TILE_CODE, i, j);
+
+                //Activate so we can animate tile
+                tile_to_place.gameObject.SetActive(true);
+
+                //Animate tile on start
+                m_tileManager.AnimateTile(tile_to_place, new Vector2(i, j), 1f);
+
+
+
+            }
+        }
+
+
+        m_matchedTiles.Clear();
+        m_bombPosition.Clear();
+        possibleMoves.Clear();
+        highlightedMoves.Clear();
+        SuggestMoves();
+
+        m_tileManager.canAcceptInputs = true;
+    }
+
+
+   
+
 
 
 
