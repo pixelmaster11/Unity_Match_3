@@ -41,19 +41,19 @@ public class TileBomb : Tile
         switch(code)
         {
             case Constants.RED_TILE_CODE:
-                spriteRenderer.color = Color.red;
+                spriteRenderer.color = new Color(255, 0 , 0);
                 
                 break;
 
             
             case Constants.GREEN_TILE_CODE:
-                spriteRenderer.color = Color.green;
+                spriteRenderer.color = new Color(0, 255, 0);
                
                 break;
 
             //Purple
             case Constants.PURPLE_TILE_CODE:
-                spriteRenderer.color  = new Color(143, 0 , 255);
+                spriteRenderer.color  = new Color(120, 0 , 255);
                 
                 break;
 
@@ -65,13 +65,13 @@ public class TileBomb : Tile
 
 
             case Constants.YELLOW_TILE_CODE:
-                spriteRenderer.color = Color.yellow;
+                spriteRenderer.color = new Color(255, 255, 0);
                 
                 break;
 
 
             case Constants.BLUE_TILE_CODE:
-                spriteRenderer.color = Color.blue;
+                spriteRenderer.color = new Color(0 , 0 , 255);
                
                 break;
 
@@ -87,7 +87,7 @@ public class TileBomb : Tile
 
 
             default:
-                spriteRenderer.color = Color.white;
+                spriteRenderer.color = new Color(255, 255, 255);
                    break;
 
         }

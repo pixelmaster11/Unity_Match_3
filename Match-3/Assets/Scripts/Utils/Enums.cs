@@ -2,6 +2,9 @@
 using System.Collections.Generic;
 using UnityEngine;
 
+/// <summary>
+/// Stores all game enums
+/// </summary>
 public class Enums
 {
 

@@ -4,7 +4,7 @@ using UnityEngine;
 
 public class AnnotherShuffle : IBoardShuffleStrategy
 {
-    public void ShuffleBoard(ref int[,] board, ref Tile[,] tilesBoard, BoardManager boardManager, TileManager tileManager)
+    public void ShuffleBoard(int[,] board, Tile[,] tilesBoard, BoardManager boardManager, TileManager tileManager)
     {
         System.Random rand = new System.Random();
 

@@ -2,8 +2,14 @@
 using System.Collections.Generic;
 using UnityEngine;
 
+/// <summary>
+/// This class is responsible for handiling score and win / lose condition
+/// </summary>
 public class ScoreManager : Manager
 {
+
+    #region VARIABLE AND REFERENCES
+
     [SerializeField]
     private UIManager m_uimanager;
 
@@ -25,14 +31,13 @@ public class ScoreManager : Manager
 
     private int m_prevGoalTileCode;
 
-    private void Start()
-    {
-        goalTileCode = Random.Range(1, Constants.MAX_TILE_CODES + 1);
-        m_prevGoalTileCode = goalTileCode;
-        SetGoal();
-    }
+    #endregion // VARIABLE AND REFERENCES
 
-
+    //Sets time or moves and checks for win condtions
+    #region TIMER / MOVES / WIN CONDITION
+    /// <summary>
+    /// This wil set the game's goal type to be timer based or based on number of moves
+    /// </summary>
     private void SetGoal()
     {
         switch(goalType)
@@ -59,13 +64,18 @@ public class ScoreManager : Manager
         UpdateTilesCleared();
     }
     
-
+    /// <summary>
+    /// Starts the timer if timer based goal
+    /// </summary>
     private void StartTimer()
     {
         StartCoroutine(TimerRoutine());
     }
 
-
+    /// <summary>
+    /// Timer coroutine for time count
+    /// </summary>
+    /// <returns></returns>
     private IEnumerator TimerRoutine()
     {
         m_timer = 0;
@@ -89,6 +99,9 @@ public class ScoreManager : Manager
     }
 
 
+    /// <summary>
+    /// This will be called whenever a player successfully completes a move / swap
+    /// </summary>
     public void UpdateMoves()
     {
         if(goalType == Enums.GoalType.MoveBased)
@@ -105,12 +118,15 @@ public class ScoreManager : Manager
         }
     }
 
-
+    /// <summary>
+    /// This will be called whenever a sequence of match of goal tiles is cleared
+    /// </summary>
     public void UpdateTilesCleared()
     {
         m_currentTiles++;     
         m_uimanager.UpdateTilesClearedText(m_currentTiles);
 
+        //If goal reached then check for win condition
         if (m_currentTiles >= totalTiles)
         {
             CheckWin();
@@ -118,35 +134,53 @@ public class ScoreManager : Manager
 
     }
 
-
+    /// <summary>
+    /// This functions checks for winning / losing conditon
+    /// </summary>
     public void CheckWin()
     {
         if (m_currentTiles >= totalTiles)
         {
             m_tileManager.Won(true);
+            m_uimanager.WinLose(true);
         }
 
         else
         {
             m_tileManager.Won(false);
+            m_uimanager.WinLose(false);
         }    
 
     }
 
+    #endregion // TIMER / MOVES / WIN CONDITON
 
+    //All functionality related to play or reload or load new level
+    #region / PLAY / RESTART / LOAD NEW LEVEL
+
+    /// <summary>
+    /// Called when level is restarted
+    /// </summary>
     public void Restart()
     {
         OnReset();
         goalTileCode = m_prevGoalTileCode;
     }
 
+    /// <summary>
+    /// Called when a new level is loaded
+    /// </summary>
     public void NewLevel()
     {
-        OnReset();
         goalTileCode = Random.Range(1, Constants.MAX_TILE_CODES + 1);
+        m_prevGoalTileCode = goalTileCode;
+        OnReset();
+       
     }
 
-
+    /// <summary>
+    /// Resets all game counters
+    /// </summary>
     public void OnReset()
     {
         m_currentMoves = -1;
@@ -156,13 +190,22 @@ public class ScoreManager : Manager
         SetGoal();
     }
 
+
+    /// <summary>
+    /// This is called on game start
+    /// </summary>
+    public void OnPlay()
+    {
+        NewLevel();
+    }
+
     public override void ManagedUpdate()
     {
        
     }
 
+    #endregion // / PLAY / RESTART / LOAD NEW LEVEL
 
-   
-    
+
 
 }

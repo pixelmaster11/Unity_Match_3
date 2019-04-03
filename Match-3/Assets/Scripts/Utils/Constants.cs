@@ -2,6 +2,9 @@
 using System.Collections.Generic;
 using UnityEngine;
 
+/// <summary>
+/// Stores all constant data of the game
+/// </summary>
 public class Constants 
 {
 

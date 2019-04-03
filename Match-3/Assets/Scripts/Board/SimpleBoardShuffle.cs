@@ -2,9 +2,12 @@
 using System.Collections.Generic;
 using UnityEngine;
 
+/// <summary>
+/// This is a simple board shuffling method based on Fischer - Yates algorithm extended for 2-d arrays 
+/// </summary>
 public class SimpleBoardShuffle : IBoardShuffleStrategy
 {
-    public void ShuffleBoard(ref int [,] board, ref Tile[,] tilesBoard, BoardManager boardManager, TileManager tileManager)
+    public void ShuffleBoard(int [,] board, Tile[,] tilesBoard, BoardManager boardManager, TileManager tileManager)
     {
         System.Random rand = new System.Random();
 

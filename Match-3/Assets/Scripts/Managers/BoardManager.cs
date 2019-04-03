@@ -3,8 +3,15 @@ using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
 
+/// <summary>
+/// This class is responsible for handling all board functionality and operation
+/// Uses strategy pattern for filling board and shuffling the board
+/// This pattern can be extended for all other board operations as well
+/// </summary>
 public class BoardManager : Manager
 {
+    #region VARIABLES AND REFERENCES
+
     [SerializeField]
     private TileManager m_tileManager;
 
@@ -16,6 +23,7 @@ public class BoardManager : Manager
 
     [SerializeField]
     private GameObject m_bgTile;
+    private List<GameObject> m_bgTiles = new List<GameObject>();
 
     private IBoardFillStrategy m_boardFillStrategy;
     private IBoardShuffleStrategy m_boardShuffleStrategy;
@@ -37,13 +45,13 @@ public class BoardManager : Manager
 
     private int[,] m_storedLogicalBoard;
 
+    #endregion // VARIABLES AND REFERENCES
+
+    #region MONO METHODS
+
     private void Start()
-    {
-        
-       
-        SetupCamera();
-        InitBGTiles();
-       
+    {      
+        SetupCamera();         
     }
 
 
@@ -52,17 +60,44 @@ public class BoardManager : Manager
         
     }
 
+    #endregion //MONO METHODS
 
+    //Initialize functions like fill the board / arrays
+    #region INIT
+
+    /// <summary>
+    /// Just a helper / debug function to load background tiles
+    /// </summary>
     public void InitBGTiles()
     {
-        for(int i = 0; i < width; i++)
+        if(m_bgTiles.Count == width * height)
         {
-            for(int j = 0; j < height; j++)
+            for (int i = 0; i < m_bgTiles.Count; i++)
             {
-                GameObject go = (GameObject) Instantiate(m_bgTile, new Vector2(i, j), Quaternion.identity);
-                go.transform.parent = m_tileManager.transform;
+                m_bgTiles[i].gameObject.SetActive(true);
             }
         }
+
+        else
+        {
+            if(m_bgTiles.Count > 0)
+            {
+                m_bgTiles.Clear();
+            }
+           
+
+            for (int i = 0; i < width; i++)
+            {
+                for (int j = 0; j < height; j++)
+                {
+                    GameObject go = (GameObject)Instantiate(m_bgTile, new Vector2(i, j), Quaternion.identity);
+                    go.transform.parent = m_tileManager.transform;
+                    m_bgTiles.Add(go);
+                }
+            }
+        }
+
+       
     }
 
 
@@ -71,6 +106,8 @@ public class BoardManager : Manager
     /// </summary>
     public IEnumerator InitializeBoard()
     {
+        InitBGTiles();
+
         //Init the board arrays
         m_logicalBoard = new int[width, height];
         m_tilesOnBoard = new Tile[width, height];    
@@ -86,7 +123,6 @@ public class BoardManager : Manager
 
 
 
-
         //Fill the graphical board using logical board data
         for (int i = 0; i < width; i++)
         {
@@ -96,17 +132,12 @@ public class BoardManager : Manager
                 //Get the logical filled board data based on chosen fill method
                 int tileCode = m_boardFillStrategy.FillBoard(width, height, i, j, Constants.MAX_TILE_CODES, 0, false);
 
-                //Assign the tilecode into the logical board
-                //m_logicalBoard[i, j] = tileCode;
-
+ 
                 //Get the appropriate tile based on tile code
                 Tile tile_to_place = m_tileManager.GetTileFromFactory(tileCode);
             
                 //Place the tile on board
                 PlaceTilesOnBoard(tile_to_place, tile_to_place.tileData.TILE_CODE, i, j);
-
-                //Place the new tile on board
-                //PlaceTilesOnBoard(tile_to_place, tileCode, i, j);
 
                 int x = 1;
 
@@ -122,11 +153,6 @@ public class BoardManager : Manager
                     //Get new tile 
                     tileCode = m_boardFillStrategy.FillBoard(width, height, i, j, Constants.MAX_TILE_CODES, 0, true);
 
-                    //Asign
-                    // m_logicalBoard[i, j] = tileCode;
-
-                   
-
                     //Get the appropriate tile based on new tile code
                     tile_to_place = m_tileManager.GetTileFromFactory(tileCode);
 
@@ -135,12 +161,11 @@ public class BoardManager : Manager
                     PlaceTilesOnBoard(tile_to_place, tile_to_place.tileData.TILE_CODE, i, j);
 
 
-                    //Place the new tile on board
-                    //PlaceTilesOnBoard(tile_to_place, tileCode, i, j);
-
 
                     x++;
 
+                    //If max iterations passed
+                    //TODO: RESTART LOADING NEW PIECES FROM 0
                     if (x >= 100)
                     {
                         break;
@@ -148,26 +173,12 @@ public class BoardManager : Manager
 
                 }
 
-                //Get tile code
-                //m_logicalBoard[i, j] = tileCode;
-
-               //Get the appropriate tile based on tile code
-                //tile_to_place = m_tileManager.GetTileFromFactory(tileCode);
 
                 //Activate so we can animate tile
                 tile_to_place.gameObject.SetActive(true);
 
                 //Animate tile on start
                 m_tileManager.AnimateTile(tile_to_place, new Vector2(i, j), 1f);
-
-              
-
-
-                //initialize the tile position
-                //tile_to_place.transform.position = new Vector2(i, j);
-
-                //Place the tile on board
-                //PlaceTilesOnBoard(tile_to_place, tileCode, i, j);
 
 
 
@@ -176,17 +187,32 @@ public class BoardManager : Manager
 
         }
 
+        //Cache the board for reloading purposes
         m_storedLogicalBoard = m_logicalBoard;
 
         yield return new WaitForSeconds(1);
 
-        m_tileManager.canAcceptInputs = true;
+        //Check if we have atleast 1 possible move 
+        if(IsThereAPossibleMatch())
+        {
+            m_tileManager.canAcceptInputs = true;
+        }
 
-        SuggestMoves();
+        //If not create a new level
+        else
+        {
+
+            NewLevel();
+        }
+       
+
 
     }
 
-   
+    #endregion //INIT
+
+    //Checks for any matches on board while filling or iterates through full board for any matches
+    #region CHECK FOR MATCHES
     /// <summary>
     /// This function checks for matches as the board gets filled on initialize
     /// </summary>
@@ -269,7 +295,6 @@ public class BoardManager : Manager
 
     }
 
-
     /// <summary>
     /// This function checks for all matches on the board 
     /// </summary>
@@ -278,12 +303,9 @@ public class BoardManager : Manager
         for (int i = 0; i < width; i++)
         {
             for (int j = 0; j < height; j++)
-            {
-                if (!m_tilesOnBoard[i, j].tileGraphics.tileHighlighted)
-                {
-                    FindMatch(new Vector2(i, j), new Vector2(i, j), false);
-                }
-
+            {                          
+                FindMatch(new Vector2(i, j), new Vector2(i, j), false);
+                
             }
 
         }
@@ -304,8 +326,11 @@ public class BoardManager : Manager
         return true;
     }
 
+    #endregion // CHECK FOR MATCHES
 
 
+    //Checks for all possible moves a user can make / suggests moves
+    #region CHECK FOR POSSIBLE MOVES
     /// <summary>
     /// This function is responsible for suggesting possible moves to the player
     /// </summary>
@@ -351,20 +376,7 @@ public class BoardManager : Manager
         return true;
     }
 
-    /// <summary>
-    /// This function shuffles the board based on chosen shuffling strategy
-    /// </summary>
-    public void ShuffleBoard()
-    {
-        Random.InitState((int)System.DateTime.Now.Ticks);
-
-        m_boardShuffleStrategy = new SimpleBoardShuffle();
-
-        m_boardShuffleStrategy.ShuffleBoard(ref m_logicalBoard, ref m_tilesOnBoard, this, m_tileManager);
-   
-
-    }
-
+    
    
     /// <summary>
     /// This function iterates through 3x3 matrix of adjacent neighbours of tile at x,y
@@ -380,18 +392,13 @@ public class BoardManager : Manager
         //Left
         if (CheckBounds(x - 1, y) && m_logicalBoard[x, y] == m_logicalBoard[x - 1, y])
         {
-
-           
-           
+              
 
             possibleMove = GetPossibleMoveX(x, y, 1);
 
             if (possibleMove != Vector2.zero)
             {
-                //HighlightMove(new Vector2(x, y));
-                //HighlightMove(new Vector2(x - 1, y));
-                // HighlightMove(possibleMove);
-
+          
                
                 possibleMoves.Add(new Vector2(x, y));
                 possibleMoves.Add(new Vector2(x - 1, y));
@@ -402,9 +409,7 @@ public class BoardManager : Manager
 
             if (possibleMove != Vector2.zero)
             {
-                //HighlightMove(new Vector2(x, y));
-                //HighlightMove(new Vector2(x - 1, y));
-                // HighlightMove(possibleMove);
+          
 
                 possibleMoves.Add(new Vector2(x, y));
                 possibleMoves.Add(new Vector2(x - 1, y));
@@ -422,9 +427,7 @@ public class BoardManager : Manager
 
             if (possibleMove != Vector2.zero)
             {
-               // HighlightMove(new Vector2(x, y));
-               // HighlightMove(new Vector2(x + 1, y));
-              //  HighlightMove(possibleMove);
+             
 
                 possibleMoves.Add(new Vector2(x, y));
                 possibleMoves.Add(new Vector2(x + 1, y));
@@ -435,14 +438,35 @@ public class BoardManager : Manager
 
             if (possibleMove != Vector2.zero)
             {
-               // HighlightMove(new Vector2(x, y));
-               // HighlightMove(new Vector2(x + 1, y));
-               // HighlightMove(possibleMove);
+             
 
                 possibleMoves.Add(new Vector2(x, y));
                 possibleMoves.Add(new Vector2(x + 1, y));
                 possibleMoves.Add(possibleMove);
                
+            }
+
+            possibleMove = GetPossibleMoveXExtra(x, y, -1);
+
+            if (possibleMove != Vector2.zero)
+            {
+               
+
+                possibleMoves.Add(new Vector2(x, y));
+                possibleMoves.Add(new Vector2(x + 1, y));
+                possibleMoves.Add(possibleMove);
+
+            }
+
+            possibleMove = GetPossibleMoveXExtra(x + 1, y, 1);
+
+            if (possibleMove != Vector2.zero)
+            {
+              
+
+                possibleMoves.Add(new Vector2(x, y));
+                possibleMoves.Add(new Vector2(x + 1, y));
+                possibleMoves.Add(possibleMove);
             }
 
         }
@@ -456,9 +480,7 @@ public class BoardManager : Manager
 
             if (possibleMove != Vector2.zero)
             {
-               // HighlightMove(new Vector2(x, y));
-               // HighlightMove(new Vector2(x, y - 1));
-               // HighlightMove(possibleMove);
+               
 
                 possibleMoves.Add(new Vector2(x, y));
                 possibleMoves.Add(new Vector2(x, y - 1));
@@ -469,9 +491,7 @@ public class BoardManager : Manager
 
             if (possibleMove != Vector2.zero)
             {
-               // HighlightMove(new Vector2(x, y));
-               // HighlightMove(new Vector2(x, y - 1));
-               // HighlightMove(possibleMove);
+              
 
                 possibleMoves.Add(new Vector2(x, y));
                 possibleMoves.Add(new Vector2(x, y - 1));
@@ -489,9 +509,7 @@ public class BoardManager : Manager
 
             if (possibleMove != Vector2.zero)
             {
-               // HighlightMove(new Vector2(x, y));
-               // HighlightMove(new Vector2(x, y + 1));
-               // HighlightMove(possibleMove);
+               
                 possibleMoves.Add(new Vector2(x, y));
                 possibleMoves.Add(new Vector2(x, y + 1));
                 possibleMoves.Add(possibleMove);
@@ -501,9 +519,7 @@ public class BoardManager : Manager
 
             if (possibleMove != Vector2.zero)
             {
-                //HighlightMove(new Vector2(x, y));
-                // HighlightMove(new Vector2(x, y + 1));
-                //HighlightMove(possibleMove);
+               
 
                 possibleMoves.Add(new Vector2(x, y));
                 possibleMoves.Add(new Vector2(x, y + 1));
@@ -514,9 +530,7 @@ public class BoardManager : Manager
 
             if (possibleMove != Vector2.zero)
             {
-                // HighlightMove(new Vector2(x, y));
-                // HighlightMove(new Vector2(x, y + 1));
-                //HighlightMove(possibleMove);
+                
 
                 possibleMoves.Add(new Vector2(x, y));
                 possibleMoves.Add(new Vector2(x, y + 1));
@@ -528,9 +542,7 @@ public class BoardManager : Manager
 
             if (possibleMove != Vector2.zero)
             {
-                // HighlightMove(new Vector2(x, y));
-                // HighlightMove(new Vector2(x, y + 1));
-                // HighlightMove(possibleMove);
+               
 
                 possibleMoves.Add(new Vector2(x, y));
                 possibleMoves.Add(new Vector2(x, y + 1));
@@ -548,9 +560,7 @@ public class BoardManager : Manager
 
                 if (possibleMove != Vector2.zero)
                 {
-                    //HighlightMove(new Vector2(x, y));
-                    //HighlightMove(new Vector2(x - 1, y + 1));
-                    //HighlightMove(possibleMove);
+                    
                     
                     possibleMoves.Add(new Vector2(x, y));
                     possibleMoves.Add(new Vector2(x - 1, y + 1));
@@ -571,9 +581,7 @@ public class BoardManager : Manager
 
                 if (possibleMove != Vector2.zero)
                 {
-                    //HighlightMove(new Vector2(x, y));
-                   // HighlightMove(new Vector2(x - 1, y - 1));
-                   // HighlightMove(possibleMove);
+                   
                     
                     possibleMoves.Add(new Vector2(x, y));
                     possibleMoves.Add(new Vector2(x - 1, y - 1));
@@ -592,10 +600,7 @@ public class BoardManager : Manager
 
                 if (possibleMove != Vector2.zero)
                 {
-                    //HighlightMove(new Vector2(x, y));
-                   // HighlightMove(new Vector2(x + 1, y - 1));
-                    //HighlightMove(possibleMove);
-
+                  
                     possibleMoves.Add(new Vector2(x, y));
                     possibleMoves.Add(new Vector2(x + 1, y - 1));
                     possibleMoves.Add(possibleMove);
@@ -615,9 +620,7 @@ public class BoardManager : Manager
 
                 if (possibleMove != Vector2.zero)
                 {
-                    //HighlightMove(new Vector2(x, y));
-                   // HighlightMove(new Vector2(x + 1, y + 1));
-                    //HighlightMove(possibleMove);
+                   
 
                     possibleMoves.Add(new Vector2(x, y));
                     possibleMoves.Add(new Vector2(x + 1, y + 1));
@@ -693,6 +696,7 @@ public class BoardManager : Manager
         m_tilesOnBoard[(int)suggestedMove.x, (int)suggestedMove.y].HighlightTile(true);
     }
 
+
     public void ClearHighlightedMoves()
     {
         for(int i = 0; i < highlightedMoves.Count; i++)
@@ -740,7 +744,7 @@ public class BoardManager : Manager
     //    X
     //    X
     //  X 0 X
-    // 
+    //
     public Vector2 GetPossibleMoveY(int x, int y, int direction)
     {
         //Right/Left Up diagonal
@@ -768,6 +772,7 @@ public class BoardManager : Manager
     // 0    X
     // X    0
     // X    X
+    
     public Vector2 GetPossibleMoveYExtra(int x, int y, int direction)
     {
         //Right Up/down 2 spaces
@@ -780,6 +785,26 @@ public class BoardManager : Manager
         return Vector2.zero;
 
     }
+
+
+    //Special Row wise move check
+    //          
+    //     X X 0 X 
+    //     X 0 X X    
+    //
+    public Vector2 GetPossibleMoveXExtra(int x, int y, int direction)
+    {
+        //Right Up/down 2 spaces
+        if (CheckBounds(x + 2 * direction, y) && m_logicalBoard[x, y] == m_logicalBoard[x + 2 * direction, y] &&
+            CheckBounds(x + 1 * direction, y) && m_tilesOnBoard[x + 1 * direction, y].tileData.tileType != Enums.TileType.Block)
+        {
+            return new Vector2(x + 2 * direction, y);
+        }
+
+        return Vector2.zero;
+
+    }
+
 
 
     //Special case diagonal move check
@@ -805,9 +830,11 @@ public class BoardManager : Manager
         return Vector2.zero;
     }
 
+    #endregion // CHECK FOR POSSIBLE MOVES
 
 
-
+    //Swapping tiles logically / placing them in board arrays and shuffling board
+    #region BOARD SWAP / PLACEMENT / SHUFFLE
     /// <summary>
     /// This functions places all the tiles on board logically & graphically in both arrays
     /// </summary>
@@ -880,6 +907,25 @@ public class BoardManager : Manager
     }
 
 
+    /// <summary>
+    /// This function shuffles the board based on chosen shuffling strategy
+    /// </summary>
+    public void ShuffleBoard()
+    {
+        Random.InitState((int)System.DateTime.Now.Ticks);
+
+        m_boardShuffleStrategy = new SimpleBoardShuffle();
+
+        m_boardShuffleStrategy.ShuffleBoard(m_logicalBoard, m_tilesOnBoard, this, m_tileManager);
+
+
+    }
+
+    #endregion //BOARD SWAP / PLACEMENT / SHUFFLE
+
+
+    //Finding match algorithm 
+    #region MATCH FINDING
     /// <summary>
     /// Finds match between two swapped tiles
     /// </summary>
@@ -1322,9 +1368,11 @@ public class BoardManager : Manager
                 
     }
 
+    #endregion //MATCH FINDING
 
 
-
+    //Clearingg tiles --> collapsing tiles --> filling new tiles
+    #region CLEAR / COLLAPSE / FILL NEW
     /// <summary>
     /// This function clears the matched tiles from the board
     /// </summary>
@@ -1417,6 +1465,8 @@ public class BoardManager : Manager
 
     }
 
+
+    #region BOMB
     /// <summary>
     /// This function creates and places a bomb on the board 
     /// </summary>
@@ -1532,80 +1582,10 @@ public class BoardManager : Manager
         return adjTiles;
     }
 
+    #endregion //BOMB
 
 
-
-
-    //Clears all tiles from col and row
-    /*  public void ClearTiles(int col, int row, bool clearRow = false, bool clearCol = false)
-      {
-          if(clearRow == false & clearCol == false)
-          {
-              ClearTiles(new Vector2(col, row));
-              return;
-          }
-
-          if(clearRow)
-          {
-              //Clear row
-              for (int i = 0; i < width; i++)
-              {
-                  //yield return new WaitForSeconds(0.2f);
-
-                  //Make it Empty tile
-                  m_logicalBoard[i, row] = 0;
-
-                  //Clear Tile
-                  m_tilesOnBoard[i, row].OnDeSpawnTile();
-
-                  Collapse(i, row);
-              }
-          }
-
-          if(clearCol)
-          {
-
-              //Clear col
-              for (int i = 0; i < height; i++)
-              {
-                  //yield return new WaitForSeconds(0.2f);
-
-                  //Make it Empty tile
-                  m_logicalBoard[col, i] = 0;
-
-                  //Clear Tile
-                  m_tilesOnBoard[col, i].OnDeSpawnTile();
-
-                  Collapse(col, i);
-              }
-          }
-
-
-
-
-
-
-      }
-
-
-      public void ClearTiles(Vector2 index)
-      {
-          int x = (int)index.x;
-          int y = (int)index.y;
-
-          //Make it Empty tile
-          m_logicalBoard[x, y] = 0;
-
-          //Clear Tile
-          m_tilesOnBoard[x, y].OnDeSpawnTile();
-
-          Collapse(x, y);
-      }
-
-  */
-
-
-
+    
     /// <summary>
     /// This function collapses all the tiles down into the cleared cells
     /// </summary>
@@ -1673,31 +1653,6 @@ public class BoardManager : Manager
        
     }
 
-
-    //Collapse at pos x, y
-   /* public void Collapse(int X, int Y)
-    {
-        
-         //We need to move all pieces above all of the cleared tiles down by 1 row
-        for (int y = Y; y < height - 1; y++)
-        {
-            //print("(X , Y + 1) :" + " ( " + X + " , " + (y+1) + " )");
-
-            m_tilesOnBoard[X, y + 1].tileGraphics.tileFalling = true;
-
-           float fallSpeed = m_tilesOnBoard[X, y + 1].tileGraphics.tileFallSpeed;
-
-         
-           m_tileManager.AnimateTile(m_tilesOnBoard[X, y + 1], new Vector2(X, y), fallSpeed);
-
-           SwapTilesOnBoard(new Vector2(X, y + 1), new Vector2(X, y));
-               
-        }
-    
-        //print("End");
-
-    }*/
-
     
     /// <summary>
     ///  This function fills in new tiles after all tiles have been cleared and collapsed
@@ -1761,13 +1716,24 @@ public class BoardManager : Manager
      
     }
 
+    #endregion // CLEAR / COLLAPSE / FILL NEW
 
+
+    //Functions related to reloading or loading a new level
+    #region NEW LEVEL LOAD / CURRENT LEVEL RELOAD
+
+    /// <summary>
+    /// Called when level is restarting
+    /// </summary>
     public void Restart()
     {        
         StopAllCoroutines();
         LoadPreviousTiles();
     }
 
+    /// <summary>
+    /// Called when a new level is loading
+    /// </summary>
     public void NewLevel()
     {
         StopAllCoroutines();
@@ -1775,7 +1741,9 @@ public class BoardManager : Manager
         StartCoroutine(InitializeBoard());
     }
 
-
+    /// <summary>
+    /// Clears all tiles while reloading / loading a level
+    /// </summary>
     public void ClearAllTiles()
     {
         for (int i = 0; i < width; i++)
@@ -1794,8 +1762,16 @@ public class BoardManager : Manager
         }
 
 
+        for (int i = 0; i < m_bgTiles.Count; i++)
+        {
+            m_bgTiles[i].gameObject.SetActive(false);
+        }
+
     }
 
+    /// <summary>
+    /// Reloads all previously loaded tiles
+    /// </summary>
     public void LoadPreviousTiles()
     {
         for(int i = 0; i < width; i++)
@@ -1839,12 +1815,13 @@ public class BoardManager : Manager
         m_tileManager.canAcceptInputs = true;
     }
 
+    #endregion // NEW LEVEL / CURRENT LEVEL RELOAD
 
-   
+    //NOTE: IDEALLY WOULD HAVE SEPARATE CLASSES FOR HANDLING DIFFERENT OPERATIONS
 
-
-
-
+    /// <summary>
+    /// Setups up camera based on board width and height
+    /// </summary>
     public void SetupCamera()
     {
 

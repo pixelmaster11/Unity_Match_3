@@ -4,6 +4,22 @@ using UnityEngine;
 using System.IO;
 using System.Text;
 
+
+/// <summary>
+/// This class is text based board fill method. Level data is read from a text file.
+/// Currently the text files are placed in resources folder. Would be better to use asset bundles / etc for release versions
+/// Need to take care that board size is same as text files data
+/// 
+/// ////FORMAT OF TEXT FILES (SEPARATOR IS BLANK SPACE ' ' ):
+//// 1 2 3 4 5 6 7 8 8 ... WIDTH
+///  1 2 3 4 5 6 7 8 1 ... WIDTH
+///  .
+///  .
+///  .
+///  HEIGHT ..     ..  ... WIDTH
+////
+/// 
+/// </summary>
 public class TextBasedBoardFillStrategy : IBoardFillStrategy
 {
      

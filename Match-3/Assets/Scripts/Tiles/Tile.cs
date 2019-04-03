@@ -2,18 +2,23 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-
+/// <summary>
+/// This is a base class for tiles. All types of tiles will inherit from this base class
+/// </summary>
 public abstract class Tile : MonoBehaviour
 {
+
+    #region VARIABLES
+
     public AnimationCurve animationCurve;
     public TileData tileData;
     public TileGraphics tileGraphics;
     protected TileManager m_tileManager;
-    
 
+    #endregion // VARIABLES
 
-
-
+    //fUNCTIONS common to all types of tiles inherting this class
+    #region COMMON TILE FUNCTIONS
     //Animate on spawn
     public virtual void OnSpawnTile(TileManager tm)
     {
@@ -50,7 +55,10 @@ public abstract class Tile : MonoBehaviour
         tileGraphics.highlightObject.SetActive(enable);
     }
 
+    #endregion // COMMON TILE FUNCTIONS
 
+    //Mouse input on this tile
+    #region MOUSE INPUT
 
     public void OnMouseDown()
     {
@@ -94,7 +102,10 @@ public abstract class Tile : MonoBehaviour
         m_tileManager.ReleaseTile();
     }
 
+    #endregion // MOUSE INPUT
 
+    //Tile animation and movement coroutines
+    #region TILE MOVEMENT / ANIMATION
     /// <summary>
     /// Animate swap movement from current tile position to destination position
     /// </summary>
@@ -167,6 +178,7 @@ public abstract class Tile : MonoBehaviour
 
     }
 
+    #endregion // TILE MOVEMENMT / ANIMATION
 
 }
 

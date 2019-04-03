@@ -4,6 +4,6 @@ using UnityEngine;
 
 public interface IBoardShuffleStrategy 
 {
-    void ShuffleBoard(ref int [,] board, ref Tile [,] tilesBoard, BoardManager boardManager, TileManager tileManage);
+    void ShuffleBoard(int [,] board, Tile [,] tilesBoard, BoardManager boardManager, TileManager tileManage);
 	
 }

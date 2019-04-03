@@ -2,9 +2,13 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-
+/// <summary>
+/// This class is responsible for creating a pool of tiles
+/// </summary>
 public class TileFactory : MonoBehaviour
 {
+    #region VARIABLE AND REFERENCES
+
     [SerializeField]
     Tile[] m_tilePrefabs;
 
@@ -13,9 +17,10 @@ public class TileFactory : MonoBehaviour
 
     private List<Tile> m_tilePool;
 
+    #endregion //VARIABLES AND REFERENCES
 
-
-
+    //TILE POOL CREATION AND RETURNING TILE FROM POOL
+    #region TILE POOL
 
     public void CreateTilePool()
     {
@@ -127,6 +132,6 @@ public class TileFactory : MonoBehaviour
         return tile;
     }
 
-
+    #endregion // TILE POOL
 
 }

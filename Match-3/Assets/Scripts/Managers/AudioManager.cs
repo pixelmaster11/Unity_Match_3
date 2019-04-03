@@ -3,8 +3,12 @@ using System.Collections.Generic;
 using UnityEngine;
 using System.Linq;
 
+/// <summary>
+/// This class is responsible for handling all game audio
+/// </summary>
 public class AudioManager : Manager
 {
+    #region VARIABLES AND REFERENCES
 
     [SerializeField]
     private UIManager m_uiManager;
@@ -29,6 +33,10 @@ public class AudioManager : Manager
     private bool m_SFX_Enabled = true;
     private bool m_Music_Enabled = true;
 
+    #endregion // VARIABLES AND REFERENCES
+
+    #region MONO METHODS
+
     private void Start()
     {
         PlayBG("BG");
@@ -40,6 +48,10 @@ public class AudioManager : Manager
         
     }
 
+    #endregion // MONO METHODS
+
+    //Plays specified audio clips / single shots or bg music loops
+    #region PLAY AUDIO CLIPS
 
     public void PlaySFX(string clipName)
     {
@@ -58,7 +70,11 @@ public class AudioManager : Manager
         m_audioSourceBG.Play();
     }
 
-    
+    #endregion // PLAY AUDIO CLIPS
+
+    //control the volume of sfx or bg music
+    #region VOLUME CONTROL OF AUDIO CLIPS
+
     public void VolumeControlSFX()
     {
         m_SFX_Enabled = !m_SFX_Enabled;
@@ -83,5 +99,7 @@ public class AudioManager : Manager
         m_uiManager.SetMusic(m_Music_Enabled);
        
     }
+
+    #endregion // VOLUME CONTROL OF AUDIO CLIPS
 
 }
