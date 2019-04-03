@@ -1391,7 +1391,7 @@ MonoBehaviour:
   m_tileManager: {fileID: 166319981}
   goalType: 1
   totalMoves: 10
-  totalTimeMins: 0
+  totalTimeMins: 5
   totalTimeSecs: 30
   totalTiles: 20
   goalTileCode: 0
